@@ -1,0 +1,1 @@
+web: functions-framework --source=backend/main.py --target=senseidb_agent

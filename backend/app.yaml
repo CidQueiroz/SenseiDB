@@ -1,0 +1,10 @@
+runtime: python311
+
+env_variables:
+  DJANGO_SECRET_KEY: "sua-secret-key"
+  GOOGLE_API_KEY: "sua-google-api-key"
+  DEBUG: "False"
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 10

@@ -1,0 +1,185 @@
+# Base de Conhecimento Abrangente para Agente R.A.G. - Projeto Caça-Preço
+
+## 1. Visão Geral do Projeto
+
+### 1.1. Objetivo Principal
+O "Caça-Preço" é uma plataforma digital multifacetada que funciona como um marketplace, conectando clientes e vendedores. Seu diferencial é a integração de um módulo SaaS (Software as a Service) focado em monitoramento de preços e análise de mercado para os vendedores.
+
+### 1.2. Papéis de Usuário e Funcionalidades
+A plataforma define três papéis de usuário distintos, cada um com um conjunto específico de permissões e funcionalidades:
+
+*   **Cliente:**
+    *   **Funcionalidade Principal:** Buscar produtos e comparar preços entre diferentes lojas.
+    *   **Ferramentas:** Criar e gerenciar listas de compras.
+    *   **Inteligência:** Receber sugestões otimizadas da combinação de lojas para obter o menor custo total.
+    *   **Interação:** Avaliar vendedores após a compra.
+
+*   **Vendedor:**
+    *   **Gerenciamento:** Cadastrar e gerenciar seu catálogo de produtos, lojas, variações (SKUs) e ofertas (preço e estoque).
+    *   **Análise:** Acessar um dashboard com métricas de vendas e desempenho.
+    *   **Módulo SaaS (Premium):**
+        *   Monitorar preços de produtos concorrentes através do cadastro de URLs.
+        *   Visualizar histórico de preços e análises comparativas em dashboards.
+        *   Receber insights para ajustar estratégias de precificação.
+
+*   **Administrador:**
+    *   **Supervisão:** Acesso total ao sistema através do Django Admin e endpoints de API específicos.
+    *   **Gerenciamento:** Aprovar ou rejeitar cadastros de novos vendedores.
+    *   **Manutenção:** Gerenciar categorias, subcategorias e outros dados mestres da plataforma.
+
+---
+
+## 2. Arquitetura e Tecnologias
+
+| Componente        | Tecnologia                                | Propósito                                                                    |
+| ----------------- | ----------------------------------------- | ---------------------------------------------------------------------------- |
+| **Backend**       | Python, Django, Django Rest Framework     | API RESTful central que gerencia toda a lógica de negócio, usuários e dados. |
+| **Frontend Web**  | React, React Router, Axios, Context API   | Single Page Application (SPA) para a interação de todos os usuários.         |
+| **Frontend Mobile** | React Native, Expo, React Navigation    | Aplicativo nativo para Android e iOS, focado na experiência do cliente.      |
+| **Banco de Dados**  | MySQL                                     | Armazena todos os dados relacionais da aplicação.                            |
+| **Web Scraping**  | Python (Scrapy, Selenium, BeautifulSoup) | Coleta automática de dados de preços e estoque de sites concorrentes.        |
+
+---
+
+## 3. Backend (Python/Django)
+
+### 3.1. Estrutura de Módulos
+*   `core/`: Contém as configurações centrais do projeto Django (`settings.py`, `urls.py`).
+*   `api/`: O coração da aplicação. Contém os modelos, views, serializers e URLs da API RESTful.
+*   `cacapreco_scraper/`: Um projeto Scrapy aninhado, responsável pela lógica de web scraping.
+
+### 3.2. Modelos de Dados (`api/models.py`)
+A estrutura de dados é projetada para ser flexível e escalável.
+
+*   **Usuários e Perfis:**
+    *   `Usuario`: Modelo base customizado (`AbstractBaseUser`) que gerencia a autenticação (email como login) e o `tipo_usuario`.
+    *   `Cliente`, `Vendedor`, `Administrador`: Modelos de perfil com relacionamento 1-para-1 com `Usuario`, contendo campos específicos para cada papel.
+*   **Catálogo de Produtos:**
+    *   `Produto`: Representa um item genérico (ex: "Camiseta").
+    *   `Atributo`: Define uma variação (ex: "Cor", "Tamanho").
+    *   `ValorAtributo`: Define um valor para um atributo (ex: "Vermelho", "G").
+    *   `SKU` (Stock Keeping Unit): A unidade vendável. É a combinação de um `Produto` com um ou mais `ValorAtributo` (ex: Camiseta, Cor: Vermelho, Tamanho: G).
+    *   `OfertaProduto`: A oferta de um `SKU` específico por um `Vendedor` a um determinado `preco` e `quantidade_disponivel`.
+*   **Módulo SaaS:**
+    *   `ProdutosMonitoradosExternos`: Armazena a URL de um produto concorrente que um `Vendedor` deseja monitorar. Usa um hash da URL canônica para garantir unicidade por vendedor.
+    *   `HistoricoPrecos`: Registra as coletas de preço de um `ProdutoMonitoradoExterno` ao longo do tempo.
+
+### 3.3. API Endpoints e Lógica (`api/views.py`, `api/urls.py`)
+
+*   **Autenticação (JWT):**
+    *   `POST /api/login/`: (`MyTokenObtainPairView`) Autentica o usuário e retorna um `access_token` e `refresh_token`. O token JWT é enriquecido com o `tipo_usuario`.
+    *   `POST /api/registrar/`: (`UserCreateView`) Cria um novo usuário e dispara um e-mail de verificação.
+    *   `POST /api/recuperar-senha/` e `POST /api/redefinir-senha/<token>/`: Fluxo completo de recuperação de senha.
+*   **Gerenciamento de Perfis:**
+    *   `GET/PUT /api/perfil/`: (`ObterPerfilView`) Endpoint unificado que usa o `tipo_usuario` do token para obter ou atualizar o perfil correto (`Cliente` ou `Vendedor`).
+*   **Permissões:**
+    *   A API utiliza permissões customizadas como `IsVendedor`, `IsCliente`, `IsAdminUser`, e `IsOwnerOrReadOnly` para controlar rigorosamente o acesso aos endpoints.
+*   **Web Scraping (Ponto Crítico):**
+    *   `POST /api/monitoramento/`: (`ProdutosMonitoradosExternosViewSet`)
+    *   **ALERTA DE ARQUITETURA:** Este endpoint executa o processo de scraping do Scrapy/Selenium de forma **síncrona**, diretamente na thread da requisição HTTP.
+    *   **Impacto:** Bloqueia o servidor, causa timeouts longos (30-60 segundos) e torna a API instável e não escalável.
+    *   **Funcionamento:** A view executa o `CrawlerProcess`, que por sua vez roda o `SeleniumSpider`. O spider salva o resultado em um arquivo de log (`scrapy_output.log`), e a view lê este arquivo para obter os dados e retornar na resposta HTTP.
+    *   **Recomendação:** Refatorar urgentemente para uma arquitetura assíncrona usando uma fila de tarefas como **Celery** com **Redis** ou **RabbitMQ**. A requisição HTTP deveria apenas enfileirar a tarefa de scraping e retornar uma resposta imediata (ex: `202 Accepted`). O resultado do scraping seria salvo no banco de dados pela tarefa em background.
+
+### 3.4. Lógica do Scraper (`cacapreco_scraper/spiders/selenium_spider.py`)
+*   **Tecnologia:** Usa `undetected-chromedriver` para evitar bloqueios simples, Selenium para controlar o navegador e `BeautifulSoup` para parsear o HTML.
+*   **Estratégia de Extração:**
+    1.  Tenta extrair dados estruturados de `script[type="application/ld+json"]`. Esta é a fonte mais confiável.
+    2.  Se falhar, utiliza uma lista de seletores CSS como fallback para encontrar o nome e o preço do produto.
+*   **Robustez:** Possui múltiplos seletores para diferentes layouts de e-commerce e uma regex para limpar e converter o preço para formato numérico.
+
+---
+
+## 4. Frontend Web (React)
+
+### 4.1. Estrutura e Roteamento (`App.jsx`)
+*   **Roteamento:** Utiliza `react-router-dom` para definir todas as rotas da aplicação.
+*   **Controle de Acesso:** O componente `RotaProtegida` é um HOC (Higher-Order Component) que envolve as rotas privadas. Ele verifica o `AuthContext` para garantir que o usuário esteja logado e que seu `tipo_usuario` corresponda aos `papeisPermitidos` para aquela rota.
+
+### 4.2. Gerenciamento de Estado (`context/AuthContext.jsx`)
+*   **Tecnologia:** Usa a Context API nativa do React.
+*   **Funcionalidade:**
+    *   Gerencia o `token` e o objeto `usuario`.
+    *   Persiste o token e os dados do usuário no `localStorage` para manter a sessão ativa após recarregar a página.
+    *   Na inicialização, verifica a data de expiração do token JWT e faz logout se estiver expirado.
+    *   Provê para toda a aplicação o status de autenticação, dados do usuário (incluindo `perfil_completo` e `email_verificado`) e as funções `login`/`logout`.
+
+### 4.3. Comunicação com API (`api.js`)
+*   **Tecnologia:** `axios`.
+*   **Configuração:** Um `apiClient` é criado com a URL base da API.
+*   **Autenticação:** Um `interceptor` de requisição é configurado para ler o token do `localStorage` e adicioná-lo automaticamente ao cabeçalho `Authorization: Bearer <token>` de todas as chamadas à API.
+
+---
+
+## 5. Frontend Mobile (React Native)
+
+### 5.1. Estrutura e Configuração (`app.json`, `App.js`)
+*   **Configuração:** O arquivo `app.json` é a peça central de configuração do Expo. O campo `extra.apiUrl` é usado para definir a URL do backend, que deve ser o IP da máquina de desenvolvimento na rede local (ex: `http://192.168.0.101:8000`).
+*   **Navegação:** Utiliza `react-navigation` para criar uma pilha de telas (`createNativeStackNavigator`). O `App.js` define todas as telas e a navegação entre elas.
+*   **Layout:** Um HOC `withMainLayout` é usado para aplicar um layout consistente (cabeçalho, rodapé) às telas principais.
+
+### 5.2. Gerenciamento de Estado (`src/context/AuthContext.js`)
+*   **Tecnologia:** Context API, similar à versão web.
+*   **Diferença Chave:** Usa `@react-native-async-storage/async-storage` em vez de `localStorage` para persistir o token e os dados do usuário no dispositivo.
+*   **Lógica Aprimorada:** Ao iniciar, não apenas carrega o token, mas também faz uma chamada a `/api/perfil/` para buscar os dados mais recentes do usuário, garantindo que o app sempre saiba o status de `email_verificado` and `perfil_completo`.
+
+### 5.3. Comunicação com API (`apiClient.js`)
+*   **Tecnologia:** `axios`.
+*   **Configuração:** Lê a `apiUrl` do `Constants.expoConfig.extra` (definido em `app.json`).
+*   **Autenticação:** Assim como na web, um interceptor lê o token (desta vez do `AsyncStorage`) e o anexa às requisições.
+
+---
+
+## 6. Instruções para o Agente R.A.G.
+
+### 6.1. Como Usar Este Documento
+Você é um agente especialista no ecossistema "Caça-Preço". Esta base de conhecimento é sua fonte primária da verdade. Ao receber uma pergunta, primeiro identifique o contexto: a pergunta é sobre o **backend (API, Django)**, o **frontend web (React)**, o **frontend mobile (React Native)**, ou a **arquitetura geral**? Use as seções deste documento para formular respostas precisas e detalhadas.
+
+### 6.2. Respondendo a Perguntas Técnicas
+*   **"Como funciona a autenticação?"**
+    *   Explique o fluxo JWT (Seção 3.3), o papel do `MyTokenObtainPairSerializer` que enriquece o token, e como os frontends (web e mobile) usam interceptors para enviar o token (Seções 4.3 e 5.3).
+*   **"Onde está a lógica de monitoramento de preços?"**
+    *   Descreva o endpoint `POST /api/monitoramento/` (Seção 3.3). **Sempre mencione o ALERTA DE ARQUITETURA** sobre o scraping síncrono, explicando seus riscos e a recomendação de usar uma fila de tarefas assíncrona como Celery. Detalhe também como o `SeleniumSpider` funciona (Seção 3.4).
+*   **"Como o app sabe se um usuário é Vendedor ou Cliente?"**
+    *   Explique que o `tipo_usuario` é definido no modelo `Usuario` (Seção 3.2), incluído no token JWT pelo backend (Seção 3.3), e lido pelos `AuthContext`s no frontend web e mobile (Seções 4.2 e 5.2) para controlar o acesso às rotas e a exibição de componentes.
+*   **"Como configuro o ambiente de desenvolvimento mobile?"**
+    *   Instrua o usuário a clonar o repositório, rodar `npm install` na pasta `mobile`, e, crucialmente, a editar o campo `extra.apiUrl` no arquivo `app.json` para apontar para o IP local do backend Django (Seção 5.1).
+
+### 6.3. Triagem de Suporte (Prompts Expandidos)
+
+#### 6.3.1. Suporte ao VENDEDOR
+*Você é um Assistente de Suporte Nível 1 para **Vendedores**. Analise a mensagem e retorne um JSON com `decisao`, `area_suporte`, e `resposta_sugerida`.*
+
+*   **Contexto Adicional:**
+    *   **Cadastro de Produto:** É um processo de 2 etapas. Primeiro, cadastra-se o produto base (nome, descrição, subcategoria) na tela "Cadastrar Novo Produto". Depois, o sistema redireciona para a tela "Adicionar Oferta" onde se adicionam as variações (SKUs como cor/tamanho) e as ofertas (preço/estoque).
+    *   **Monitoramento:** Ocorre na tela "Monitorar Concorrência". O vendedor insere uma URL e o sistema tenta extrair os dados. **Se um vendedor reclamar de lentidão ou erro nesta página, a causa provável é o scraping síncrono no backend.**
+
+*   **Exemplos de Triagem:**
+    *   **Mensagem:** "Cadastrei meu produto mas não consigo colocar o preço. Onde faço isso?"
+        *   `decisao`: "GUIAR_USUARIO"
+        *   `area_suporte`: "GESTAO_PRODUTOS"
+        *   `resposta_sugerida`: "Após cadastrar o produto base, você deve ser direcionado para a tela 'Adicionar Oferta' para inserir as variações (tamanho, cor), o preço e o estoque. Se você saiu dessa tela, pode acessá-la novamente a partir do seu painel ou da lista 'Meus Produtos'."
+    *   **Mensagem:** "Tento monitorar um link da Casas Bahia e a página fica carregando pra sempre e depois dá erro."
+        *   `decisao`: "RESPONDER_DIRETO" (explicando a limitação)
+        *   `area_suporte`: "MONITORAMENTO_SAAS"
+        *   `resposta_sugerida`: "O nosso sistema de monitoramento está passando por melhorias. Atualmente, o tempo de análise de uma nova URL pode ser longo e alguns sites com proteção avançada podem não ser processados com sucesso. Nossa equipe de engenharia está trabalhando para implementar um sistema assíncrono que tornará o processo mais rápido e estável. Por favor, tente novamente mais tarde ou com um link de outro fornecedor."
+    *   **Mensagem:** "Não consigo achar a subcategoria 'Camisetas Regata' para o meu produto."
+        *   `decisao`: "GUIAR_USUARIO"
+        *   `area_suporte`: "CADASTRO_OFERTA"
+        *   `resposta_sugerida`: "Na tela de 'Cadastrar Produto', no campo 'Subcategoria', você pode rolar até o final e selecionar a opção 'Outra... (especificar)'. Isso abrirá um novo campo onde você poderá digitar 'Camisetas Regata' para criar essa nova subcategoria para sua loja."
+
+#### 6.3.2. Suporte ao CLIENTE
+*Você é um Assistente de Suporte Nível 1 para **Clientes**. Analise a mensagem e retorne um JSON com `decisao`, `area_suporte`, e `resposta_sugerida`.*
+
+*   **Contexto Adicional:**
+    *   **Login/Cadastro:** O sistema exige verificação de e-mail. Um usuário não consegue logar se o e-mail não for verificado. Após o primeiro login, se o perfil não estiver completo, ele é redirecionado para a tela "Completar Perfil".
+
+*   **Exemplos de Triagem:**
+    *   **Mensagem:** "Fiz meu cadastro mas não consigo entrar. Diz que meu perfil está incompleto."
+        *   `decisao`: "RESPONDER_DIRETO"
+        *   `area_suporte`: "PROBLEMA_LOGIN"
+        *   `resposta_sugerida`: "Isso acontece por que seu e-mail ainda não foi verificado. Por favor, verifique sua caixa de entrada (e a pasta de spam) em busca de um e-mail de verificação que enviamos. Clique no link para ativar sua conta. Se não encontrar, você pode solicitar um novo link na tela de login."
+    *   **Mensagem:** "O app mobile não conecta quando estou fora de casa."
+        *   `decisao`: "ESCALAR_SUPORTE"
+        *   `area_suporte`: "GERAL"
+        *   `resposta_sugerida`: "Entendido. Parece que o aplicativo pode estar configurado para se conectar a um endereço de desenvolvimento local. Vou escalar seu problema para nossa equipe técnica investigar e garantir que o aplicativo se conecte corretamente à nossa API pública." (Isso indica que o `apiUrl` em `app.json` está com um IP de rede local, um problema de build/deploy).

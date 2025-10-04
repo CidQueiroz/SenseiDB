@@ -1,0 +1,40 @@
+# Python virtual environments
+__pycache__/
+*.pyc
+venv/
+backend/venv/
+.venv_linux/
+
+# Folders that are not part of the backend application
+tests/
+experimental/
+scripts/
+docs/
+busca-app/
+Portfolio HTML/
+htmlcov/
+public/
+Agente_AI/
+
+# Node.js
+node_modules/
+
+# Secrets and local configuration files
+.env.deploy
+.env
+backend/.env
+backend/firebase_credentials.json
+erros.txt
+*.sqlite3
+
+# Git directory
+.git/
+
+# Other files not needed for deployment
+*.zip
+*.csv
+*.md
+README.md
+politica-cloudfront-backup.txt
+contador_mensal_deploys.txt
+deploy.bat
