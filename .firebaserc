@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "senseidb-rebranding"
-  }
+  },
+  "targets": {
+    "senseidb-rebranding": {
+      "hosting": {
+        "senseidb": [
+          "senseidb"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
