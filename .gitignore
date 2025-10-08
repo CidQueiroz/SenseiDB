@@ -69,4 +69,4 @@ node_modules/
 .dataconnect
 
 # Deployment environment variables
-.env.deploy
+.env.deploygemini.md 
