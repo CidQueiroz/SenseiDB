@@ -75,3 +75,5 @@ gemini.md
 
 experimental/
 tests/
+gcp-key.json
+tokem_git
