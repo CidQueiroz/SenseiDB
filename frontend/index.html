@@ -87,20 +87,36 @@
             .login-header p { color: var(--cor-texto-primario); }
             .form-group { margin-bottom: 20px; }
             .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
-            .form-group input { width: 100%; padding: 12px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); color: var(--cor-texto-secundario); }
+            .form-group input, .form-group select {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid var(--cor-borda);
+                border-radius: 8px;
+                background: var(--cor-fundo);
+                color: var(--cor-texto-secundario);
+                -webkit-appearance: none;
+                appearance: none;
+            }
+
+            .form-group select {
+                background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234ecdc4%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+                background-repeat: no-repeat;
+                background-position: right .7em top 50%;
+                background-size: .65em auto;
+            }
 
             /* --- Tela Principal do App --- */
-            .container { width: 100%; max-width: 1400px; height: 90vh; display: flex; background: var(--cor-container); border-radius: 15px; border: 1px solid var(--cor-borda); overflow: hidden; }
+            .container { width: 100%; max-width: 1400px; max-height: 90vh; display: flex; background: var(--cor-container); border-radius: 15px; border: 1px solid var(--cor-borda); overflow: hidden; }
 
             /* --- Sidebar --- */
             .sidebar { width: 300px; justify-content: space-between; align-items: center; background: var(--cor-fundo); padding: 20px; display: flex; margin-bottom: 5px; flex-direction: column; border-right: 1px solid var(--cor-borda); }
             .sidebar a, .mobile-sidebar a { text-decoration: none; color: inherit; }
             .sidebar h1 { font-family: var(--fonte-primaria); font-size: 28px; color: var(--cor-acao-primaria); }
             .sidebar .subtitle { font-size: 12px; color: var(--cor-texto-primario); margin-bottom: 10px; }
-            #theme-toggle-btn { background: none; border: 1px solid var(--cor-borda); color: var(--cor-terciaria); font-size: 18px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
-            #theme-toggle-btn:hover {background-color: var(--cor-container); color: var(--cor-acao-primaria); border-color: var(--cor-acao-primaria); transform: translateY(-3px); transition: transform 0.3s ease-in-out;}
-            #mobile-theme-toggle-btn { background: none; border: 1px solid var(--cor-borda); color: var(--cor-terciaria); font-size: 18px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
-            #mobile-theme-toggle-btn:hover {background-color: var(--cor-container); color: var(--cor-acao-primaria); border-color: var(--cor-acao-primaria); transform: translateY(-3px); transition: transform 0.3s ease-in-out;}
+            #theme-toggle-btn { background: none; border: none; color: var(--cor-terciaria); font-size: 18px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+            #theme-toggle-btn:hover {color: var(--cor-acao-primaria); transform: translateY(-3px); transition: transform 0.3s ease-in-out;}
+            #mobile-theme-toggle-btn { background: none; border: none; color: var(--cor-terciaria); font-size: 18px; width: 40px; height: 40px; cursor: pointer; }
+            #mobile-theme-toggle-btn:hover {background-color: var(--cor-container); color: var(--cor-acao-primaria); transform: translateY(-3px); transition: transform 0.3s ease-in-out;}
             
             .user-info { text-align: center; margin: 10px; }
             .user-info .email { font-size: 14px; color: var(--cor-terciaria); font-weight: 600; word-break: break-all; }
@@ -210,6 +226,7 @@
                 z-index: 2000;
                 transform: translateX(-100%);
                 transition: transform 0.3s ease-in-out;
+                overflow-y: auto; /* Adicionado para permitir rolagem */
             }
 
             .mobile-sidebar h1 { font-family: var(--fonte-primaria); font-size: 24px; color: var(--cor-acao-primaria); }
@@ -234,7 +251,7 @@
             @media (max-width: 900px) {
                 body { padding: 0; }
                 .container {
-                    height: 100vh;
+                    min-height: 100vh;
                     width: 100vw;
                     border-radius: 0;
                     flex-direction: column; /* Empilha o layout */
@@ -609,16 +626,30 @@
         <div id="apiModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">Configurar API Key</div>
+                
                 <div class="form-group">
-                    <label>Chave Groq API (opcional)</label>
-                    <input type="password" id="groqApiKey" placeholder="gsk_...">
-                    <small>
-                        Deixe vazio para usar Google AI
-                    </small>
+                    <label for="apiProvider">Provedor de IA</label>
+                    <select id="apiProvider" class="form-control">
+                        <option value="groq">Groq (Rápido)</option>
+                        <option value="google">Google AI (Estável)</option>
+                    </select>
                 </div>
+
+                <div id="groqApiKeyGroup" class="form-group">
+                    <label>Chave Groq API</label>
+                    <input type="password" id="groqApiKey" class="form-control" placeholder="gsk_...">
+                    <small>Obtenha sua chave em <a href="https://console.groq.com/keys" target="_blank">Groq Console</a>.</small>
+                </div>
+
+                <div id="googleApiKeyGroup" class="form-group hidden">
+                    <label>Chave Google AI API</label>
+                    <input type="password" id="googleApiKey" class="form-control" placeholder="AIza...">
+                    <small>Obtenha sua chave no <a href="https://aistudio.google.com/app/api-keys" target="_blank">Google AI Studio</a>.</small>
+                </div>
+
                 <div class="modal-buttons">
-                    <button class="btn btn-primary" onclick=saveApiKey()>Salvar</button>
-                    <button class="btn btn-secondary" onclick=closeApiModal()>Cancelar</button>
+                    <button class="btn btn-primary" onclick="saveApiKey()">Salvar</button>
+                    <button class="btn btn-secondary" onclick="closeApiModal()">Cancelar</button>
                 </div>
             </div>
         </div>
@@ -765,11 +796,14 @@
             // State
             let currentUser = null;
             let messages = [];
+            let apiProvider = localStorage.getItem('api_provider') || 'groq';
             let groqApiKey = localStorage.getItem('groq_api_key') || '';
+            let googleApiKey = localStorage.getItem('google_api_key') || '';
 
             // --- DOM Elements ---
             const themeToggleBtn = document.getElementById('theme-toggle-btn');
             const mobileThemeToggleBtn = document.getElementById('mobile-theme-toggle-btn');
+            const apiProviderSelect = document.getElementById('apiProvider');
 
             // Auto-resize textarea
             document.getElementById('chatInput').addEventListener('input', function() {
@@ -906,11 +940,14 @@
             }
 
             function updateAIStatus(aiUsed) {
-                let statusText = '🌐 Google AI Ativo'; // Padrão
+                let statusText = 'Nível Gratuito';
+                if (apiProvider === 'groq' && groqApiKey) {
+                    statusText = '🚀 Groq AI Ativo';
+                } else if (apiProvider === 'google' && googleApiKey) {
+                    statusText = '🌐 Google AI Ativo';
+                }
                 if (aiUsed) {
                     statusText = aiUsed === 'groq' ? '🚀 Groq AI Ativo' : '🌐 Google AI Ativo';
-                } else if (groqApiKey) {
-                    statusText = '🚀 Groq AI Ativo';
                 }
                 document.getElementById('aiStatus').textContent = statusText;
                 document.getElementById('mobileAiStatus').textContent = statusText;
@@ -932,20 +969,34 @@
                 sendBtn.textContent = 'Enviando...';
 
                 try {
+                    const requestBody = {
+                        user_id: currentUser.uid,
+                        query: message
+                    };
+
+                    if (apiProvider === 'groq' && groqApiKey) {
+                        requestBody.groq_api_key = groqApiKey;
+                    } else if (apiProvider === 'google' && googleApiKey) {
+                        requestBody.google_api_key = googleApiKey;
+                    }
+
                     const response = await fetch(`${BACKEND_URL}/chat/`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            user_id: currentUser.uid,
-                            query: message,
-                            groq_api_key: groqApiKey || undefined
-                        })
+                        body: JSON.stringify(requestBody)
                     });
 
                     const data = await response.json();
 
-                    if (data.erro) {
-                        addMessage(`Erro: ${data.erro}`, 'assistant');
+                    if (response.status === 429 && data.error === 'USAGE_LIMIT_EXCEEDED') {
+                        addMessage('Seu limite de uso gratuito foi atingido. Por favor, adicione sua própria chave de API para continuar.', 'assistant');
+                        showApiConfig();
+                    } else if (data.error === 'INVALID_API_KEY') {
+                        const providerName = data.provider === 'groq' ? 'Groq' : 'Google AI';
+                        addMessage(`Sua chave da ${providerName} parece ser inválida ou excedeu o limite. Por favor, verifique sua chave e tente novamente.`, 'assistant');
+                        showApiConfig();
+                    } else if (data.error) {
+                        addMessage(`Erro: ${data.error}`, 'assistant');
                     } else {
                         addMessage(data.resposta, 'assistant', data.ia_usada);
                         updateAIStatus(data.ia_usada);
@@ -1010,7 +1061,10 @@
 
             // API Config
             function showApiConfig() {
+                apiProviderSelect.value = apiProvider;
                 document.getElementById('groqApiKey').value = groqApiKey;
+                document.getElementById('googleApiKey').value = googleApiKey;
+                toggleApiInputFields();
                 document.getElementById('apiModal').classList.remove('hidden');
             }
 
@@ -1019,12 +1073,30 @@
             }
 
             function saveApiKey() {
+                apiProvider = apiProviderSelect.value;
                 groqApiKey = document.getElementById('groqApiKey').value.trim();
+                googleApiKey = document.getElementById('googleApiKey').value.trim();
+
+                localStorage.setItem('api_provider', apiProvider);
                 localStorage.setItem('groq_api_key', groqApiKey);
+                localStorage.setItem('google_api_key', googleApiKey);
+
                 updateAIStatus();
                 closeApiModal();
-                addMessage('✅ Configuração atualizada!', 'assistant');
+                addMessage('✅ Configuração de API atualizada!', 'assistant');
             }
+
+            function toggleApiInputFields() {
+                if (apiProviderSelect.value === 'groq') {
+                    document.getElementById('groqApiKeyGroup').classList.remove('hidden');
+                    document.getElementById('googleApiKeyGroup').classList.add('hidden');
+                } else {
+                    document.getElementById('groqApiKeyGroup').classList.add('hidden');
+                    document.getElementById('googleApiKeyGroup').classList.remove('hidden');
+                }
+            }
+
+            apiProviderSelect.addEventListener('change', toggleApiInputFields);
 
             // Clear chat
             function clearChat() {

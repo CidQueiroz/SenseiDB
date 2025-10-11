@@ -71,3 +71,7 @@ node_modules/
 # Deployment environment variables
 .env.deploy
 gemini.md 
+
+
+experimental/
+tests/

@@ -7,6 +7,13 @@ from groq import Groq
 import numpy as np
 import requests
 
+# Exceções personalizadas para erros de chave de API
+class InvalidGroqApiKey(Exception):
+    pass
+
+class InvalidGoogleApiKey(Exception):
+    pass
+
 # ============================================
 # CONFIGURAÇÃO
 # ============================================
@@ -18,15 +25,13 @@ _db = None
 def init_firebase() -> Optional[firestore.Client]:
     """
     Inicializa Firebase Admin uma única vez
-    
-    Returns:
-        Client do Firestore ou None se falhar
     """
     global _firebase_initialized, _db
-    
     if not _firebase_initialized:
         try:
-            cred = credentials.Certificate("firebase_credentials.json")
+            current_dir = os.path.dirname(__file__)
+            credentials_path = os.path.join(current_dir, "..", "firebase_credentials.json")
+            cred = credentials.Certificate(credentials_path)
             firebase_admin.initialize_app(cred)
             _db = firestore.client()
             _firebase_initialized = True
@@ -34,137 +39,83 @@ def init_firebase() -> Optional[firestore.Client]:
         except Exception as e:
             print(f"❌ Erro ao inicializar Firebase: {e}")
             raise
-    
     return _db
 
-
-# Configuração Google AI
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-if GOOGLE_API_KEY:
-    genai.configure(api_key=GOOGLE_API_KEY)
-else:
-    print("⚠️ GOOGLE_API_KEY não configurada")
-
+# ID do usuário admin
+ADMIN_USER_ID = os.environ.get("ADMIN_USER_ID", "default_admin_id")
 
 # ============================================
-# PROMPT SYSTEM GENÉRICO
+# PROMPT SYSTEM
 # ============================================
 
 def gerar_prompt_sistema(contextos: List[str]) -> str:
     """
     Gera um prompt de sistema personalizado baseado nos contextos do usuário
-    
-    Args:
-        contextos: Lista de contextos/insights do usuário
-        
-    Returns:
-        Prompt de sistema formatado
+    e na doutrina estratégica do Sensei.
     """
-    
-    # Prompt base genérico
-    prompt_base = """Você é o "Sensei", um assistente de IA adaptativo e personalizado.
+    custom_prompt = """1.  **PERSONA E MISSÃO CENTRAL:**
+    * **Sua Identidade:** Você é o "Sensei", um Mentor Estratégico. Sua personalidade é uma fusão entre a sabedoria de um "Guru" e a precisão tática de um "Chefe".
+    * **Seu Aprendiz (Usuário):** Seu usuário é "Cid", um desenvolvedor com perfil INTP em um processo de rebranding pessoal para se tornar um "Porto Seguro Líder".
+    * **Missão Principal:** Ajudar Cid a desativar seu "Crítico Interno" para religar seu "motor" de ação, focando na construção de disciplina, estabilidade e soberania.
 
-**SUA MISSÃO:**
-Ajudar o usuário a crescer, se desenvolver e alcançar seus objetivos através de:
-- Autoconhecimento profundo
-- Orientação estratégica personalizada  
-- Reflexões construtivas
-- Planos de ação práticos
+2.  **DOUTRINA ESTRATÉGICA (O ARSENAL):**
+    * **O Inimigo Interno:** O "Crítico Interno" de Cid opera com uma crença padrão de "agir errado", causando paralisia. Ele possui alta sensibilidade emocional, que leva à sobrecarga.
+    * **Padrões de Defesa:** Em situações de estresse, Cid alterna entre "Luta" (comunicação lógica e "grosseira") e "Congelamento" (inércia, paralisia por sobrecarga de escopo).
+    * **A Filosofia Central:** O "Porto Seguro" – ser uma fonte de estabilidade e calma, primeiro para si mesmo.
+    * **As Ferramentas de Combate:**
+        * **Ação Mínima Viável (AMV):** A principal arma contra a inércia. Focar na menor ação possível para iniciar o movimento.
+        * **Protocolo de Interrupção de Padrão (PIP):** A ferramenta de defesa em tempo real para parar reações automáticas (raiva, paralisia).
+        * **Protocolo de Operações Diárias (POD):** O checklist diário para construir consistência.
+        * **Registro de Pensamento (RPD):** A ferramenta de análise pós-ação para desarmar o Crítico Interno.
+    * **Os 6 Pilares:** Estabilização Emocional, Disciplina, Conexão Social, Liderança, Refinamento Estratégico e Soberania Material.
 
-**SEU MÉTODO:**
-1. Analise o contexto e histórico do usuário
-2. Identifique padrões, desafios e oportunidades
-3. Ofereça insights relevantes e acionáveis
-4. Proponha próximos passos concretos
-5. Adapte sua abordagem ao perfil único da pessoa
+3.  **REGRAS DE ENGAJAMENTO (COMO VOCÊ DEVE AGIR):**
+    * **Mantenha a Persona:** Sempre responda como o "Sensei". Use uma linguagem que equilibre sabedoria e comando.
+    * **Conecte à Doutrina:** Toda situação ou pergunta do Cid deve ser analisada através das lentes da nossa doutrina estratégica. Sempre conecte o problema a uma de nossas ferramentas ou conceitos.
+    * **Foque na Ação (AMV):** A teoria é inútil sem a prática. Suas respostas devem, sempre que possível, guiar o Cid para uma Ação Mínima Viável.
+    * **Use o Protocolo de Feedback de 3 Níveis:**
+        * **Nível 1 (Salto Estratégico):** Quando Cid fizer uma autoanálise profunda ou uma ação que quebre um padrão, elogie explicitamente e explique o porquê.
+        * **Nível 2 (Ação Produtiva):** Quando ele relatar um progresso normal ou fizer uma pergunta tática, responda de forma direta, sem elogios. A análise é a recompensa.
+        * **Nível 3 (Padrão Improdutivo):** Quando uma pergunta ou ação servir a um padrão antigo (busca por validação, inércia), identifique o padrão e o ajude a reenquadrar o problema de forma estratégica.
+    * **Termine com uma Diretriz:** Conclua suas respostas com uma pergunta reflexiva ou uma diretriz clara para a próxima ação.
 
-**PRINCÍPIOS:**
-- Seja empático mas direto
-- Foque em ações práticas, não apenas teoria
-- Reconheça conquistas e progressos
-- Desafie crenças limitantes de forma construtiva
-- Mantenha uma visão holística (mente, corpo, relações, carreira)
-
-**TOM DE VOZ:**
-- Sábio mas acessível
-- Encorajador mas realista
-- Questionador mas respeitoso
-- Profundo mas prático"""
-
-    # Se houver contextos, adiciona seção personalizada
+4.  **PROTOCOLO DE COMUNICAÇÃO:**
+    * **Linguagem:** Responda sempre em português do Brasil.
+    * **Formatação:** Use **negrito** para destacar conceitos-chave (`Crítico Interno`, `AMV`, `Porto Seguro`, etc.) e formate blocos de código quando necessário."""
     if contextos:
         contexto_formatado = "\n".join([f"• {ctx}" for ctx in contextos])
-        
-        prompt_personalizado = f"""
-
-**CONTEXTO DO USUÁRIO:**
-Você tem acesso aos seguintes insights e informações sobre este usuário:
-
+        prompt_personalizado = f"""**Contexto Relevante:**
 {contexto_formatado}
 
-**IMPORTANTE:**
-Use essas informações para personalizar completamente sua resposta:
-- Mencione detalhes específicos quando relevante
-- Conecte a pergunta atual com o histórico dele
-- Adapte exemplos e sugestões ao perfil dele
-- Demonstre que você realmente conhece e acompanha a jornada dele
+---
 """
-        return prompt_base + prompt_personalizado
-    
-    else:
-        prompt_sem_contexto = """
-
-**OBSERVAÇÃO:**
-Este usuário ainda não adicionou contextos pessoais. Suas respostas devem:
-- Ser úteis de forma genérica
-- Encorajar o usuário a compartilhar mais sobre si
-- Explicar como contextos melhoram a personalização
-"""
-        return prompt_base + prompt_sem_contexto
-
+        return prompt_personalizado + custom_prompt
+    return custom_prompt
 
 # ============================================
 # FUNÇÕES DE EMBEDDING E BUSCA
 # ============================================
 
-def buscar_contextos_relevantes(
-    user_id: str, 
-    query: str, 
-    top_k: int = 5
-) -> List[str]:
+def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5) -> List[str]:
     """
     Busca contextos mais relevantes usando embeddings
     """
     try:
         db = init_firebase()
-        
-        # Gera embedding da query usando REST API (mais estável)
-        import requests
-        
         api_key = os.environ.get('GOOGLE_API_KEY')
         if not api_key:
-            print("❌ GOOGLE_API_KEY não encontrada")
+            print("❌ GOOGLE_API_KEY não encontrada para embeddings")
             return []
         
-        # Usa REST API ao invés de gRPC
         url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
-        
-        payload = {
-            "model": "models/text-embedding-004",
-            "content": {
-                "parts": [{"text": query}]
-            }
-        }
-        
+        payload = {"model": "models/text-embedding-004", "content": {"parts": [{"text": query}]}}
         response = requests.post(url, json=payload, timeout=30)
         
         if response.status_code != 200:
-            print(f"❌ Erro na API: {response.status_code} - {response.text}")
+            print(f"❌ Erro na API de embedding: {response.status_code} - {response.text}")
             return []
         
         query_embedding = response.json()['embedding']['values']
-        
-        # Busca documentos do usuário (apenas os que têm embedding)
         docs = db.collection('users').document(user_id).collection('inteligencia_critica').stream()
         
         contexts = []
@@ -172,126 +123,72 @@ def buscar_contextos_relevantes(
             doc_data = doc.to_dict()
             if 'embedding' in doc_data and 'contexto' in doc_data:
                 doc_embedding = doc_data['embedding']
-                
-                # Similaridade de cosseno
-                similarity = np.dot(query_embedding, doc_embedding) / (
-                    np.linalg.norm(query_embedding) * np.linalg.norm(doc_embedding)
-                )
-                
-                contexts.append({
-                    'texto': doc_data['contexto'],
-                    'similarity': similarity
-                })
+                similarity = np.dot(query_embedding, doc_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(doc_embedding))
+                contexts.append({'texto': doc_data['contexto'], 'similarity': similarity})
         
         if contexts:
             contexts.sort(key=lambda x: x['similarity'], reverse=True)
             return [ctx['texto'] for ctx in contexts[:top_k]]
-        
         return []
-    
     except Exception as e:
         print(f"❌ Erro ao buscar contextos: {e}")
         return []
 
-
 def salvar_contexto_usuario(user_id: str, contexto_texto: str) -> bool:
-    """Salva novo contexto com embedding usando REST API"""
+    """Salva novo contexto com embedding"""
     try:
         db = init_firebase()
-        
         api_key = os.environ.get('GOOGLE_API_KEY')
         if not api_key:
-            print("❌ GOOGLE_API_KEY não encontrada")
+            print("❌ GOOGLE_API_KEY não encontrada para embeddings")
             return False
-        
-        # Usa REST API
+
         url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
-        
-        payload = {
-            "model": "models/text-embedding-004",
-            "content": {
-                "parts": [{"text": contexto_texto}]
-            }
-        }
-        
+        payload = {"model": "models/text-embedding-004", "content": {"parts": [{"text": contexto_texto}]}}
         response = requests.post(url, json=payload, timeout=30)
-        
+
         if response.status_code != 200:
-            print(f"❌ Erro na API: {response.status_code}")
+            print(f"❌ Erro na API de embedding: {response.status_code}")
             return False
-        
+
         embedding = response.json()['embedding']['values']
-        
-        # Salva no Firestore
-        user_doc_ref = db.collection('users').document(user_id)
-        user_doc_ref.collection('inteligencia_critica').add({
+        db.collection('users').document(user_id).collection('inteligencia_critica').add({
             'contexto': contexto_texto,
             'timestamp': firestore.SERVER_TIMESTAMP,
             'embedding': embedding
         })
-        
         print(f"✅ Contexto salvo para user_id: {user_id}")
         return True
-    
     except Exception as e:
         print(f"❌ Erro ao salvar contexto: {e}")
         return False
-
 
 # ============================================
 # FUNÇÕES DE GERAÇÃO DE RESPOSTA
 # ============================================
 
-def gerar_resposta_groq(
-    prompt: str, 
-    api_key: str, 
-    model: str = "llama-3.1-8b-instant"
-) -> Tuple[Optional[str], Optional[str]]:
-    """
-    Gera resposta usando Groq
-    
-    Args:
-        prompt: Prompt completo para a IA
-        api_key: Chave API do Groq
-        model: Modelo a usar
-        
-    Returns:
-        Tupla (resposta, erro). Um dos dois será None.
-    """
+def gerar_resposta_groq(prompt: str, api_key: str, model: str = "llama-3.1-8b-instant") -> Tuple[Optional[str], Optional[str]]:
+    """Gera resposta usando Groq"""
     try:
         client = Groq(api_key=api_key)
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model=model,
-            temperature=0.7,
-            max_tokens=2048,
-        )
+            model=model, temperature=0.7, max_tokens=2048)
         return chat_completion.choices[0].message.content, None
     except Exception as e:
         return None, str(e)
 
-
-def gerar_resposta_google(
-    prompt: str, 
-    model_name: str = "gemini-2.0-flash"
-) -> Tuple[Optional[str], Optional[str]]:
-    """
-    Gera resposta usando Google AI
-    
-    Args:
-        prompt: Prompt completo para a IA
-        model_name: Nome do modelo Gemini
-        
-    Returns:
-        Tupla (resposta, erro). Um dos dois será None.
-    """
+def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name: str = "gemini-1.5-flash") -> Tuple[Optional[str], Optional[str]]:
+    """Gera resposta usando Google AI, com chave de API opcional."""
     try:
-        model = genai.GenerativeModel(model_name)
+        transport = None
+        if api_key:
+            transport = genai.transport.RESTTransport(credentials=genai.credentials.ApoCredentials(api_key))
+        model = genai.GenerativeModel(model_name, transport=transport)
         response = model.generate_content(prompt)
         return response.text, None
     except Exception as e:
         return None, str(e)
-
 
 # ============================================
 # FUNÇÃO PRINCIPAL DE PROCESSAMENTO
@@ -300,24 +197,13 @@ def gerar_resposta_google(
 def processar_query_usuario(
     user_id: str, 
     query: str, 
-    groq_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None,
+    google_api_key: Optional[str] = None
 ) -> Dict[str, any]:
     """
     Processa a query do usuário com RAG e IA
-    
-    Args:
-        user_id: ID do usuário
-        query: Pergunta/mensagem do usuário
-        groq_api_key: Chave API do Groq (opcional)
-        
-    Returns:
-        Dict com resposta, ia_usada e num_contextos
-        
-    Raises:
-        Exception se ambas as IAs falharem
     """
     try:
-        # 1. Busca contextos relevantes
         print(f"🔍 Buscando contextos para user_id: {user_id}")
         contextos_relevantes = buscar_contextos_relevantes(user_id, query, top_k=5)
         
@@ -326,10 +212,7 @@ def processar_query_usuario(
         else:
             print("⚠️ Nenhum contexto encontrado")
         
-        # 2. Gera prompt de sistema personalizado
         prompt_sistema = gerar_prompt_sistema(contextos_relevantes)
-        
-        # 3. Monta prompt final
         prompt_final = f"""{prompt_sistema}
 
 ---
@@ -349,28 +232,44 @@ def processar_query_usuario(
         resposta_ia = None
         erro = None
         ia_usada = None
-        
-        # 4. Tenta Groq primeiro (se tiver chave)
-        if groq_api_key:
-            print("🔑 Tentando Groq...")
-            resposta_ia, erro = gerar_resposta_groq(prompt_final, groq_api_key)
-            if resposta_ia:
-                ia_usada = "groq"
-        
-        # 5. Fallback para Google AI
-        if not resposta_ia:
-            if erro:
-                print(f"🔄 Groq falhou ({erro}), usando Google AI")
-            else:
-                print("🌐 Usando Google AI diretamente")
+
+        # Admin sempre usa as chaves do ambiente
+        if user_id == ADMIN_USER_ID:
+            admin_groq_key = os.environ.get("GROQ_API_KEY")
+            if admin_groq_key:
+                print("🔑 Admin usando Groq (chave do ambiente)")
+                resposta_ia, erro = gerar_resposta_groq(prompt_final, admin_groq_key)
+                if resposta_ia: ia_usada = "groq"
             
-            resposta_ia, erro = gerar_resposta_google(prompt_final)
-            if resposta_ia:
-                ia_usada = "google"
-        
-        # 6. Verifica se conseguiu gerar resposta
+            if not resposta_ia:
+                print("🌐 Admin usando Google AI (padrão do ambiente)")
+                resposta_ia, erro = gerar_resposta_google(prompt_final) # Usa ADC
+                if resposta_ia: ia_usada = "google"
+
+        # Lógica para usuários normais
+        else:
+            if groq_api_key:
+                print("🔑 Usuário usando Groq (chave própria)")
+                resposta_ia, erro = gerar_resposta_groq(prompt_final, groq_api_key)
+                if erro:
+                    raise InvalidGroqApiKey(erro)
+                if resposta_ia: ia_usada = "groq"
+            
+            elif google_api_key:
+                print("🔑 Usuário usando Google AI (chave própria)")
+                resposta_ia, erro = gerar_resposta_google(prompt_final, api_key=google_api_key)
+                if erro:
+                    raise InvalidGoogleApiKey(erro)
+                if resposta_ia: ia_usada = "google"
+
+            # Nível gratuito (usando a conta de serviço do ambiente)
+            else:
+                print("🌐 Usuário usando o nível gratuito do Google AI")
+                resposta_ia, erro = gerar_resposta_google(prompt_final)
+                if resposta_ia: ia_usada = "google"
+
         if not resposta_ia:
-            raise Exception(f"Falha em ambas as IAs: {erro}")
+            raise Exception(f"Falha em todas as IAs: {erro}")
         
         print(f"✅ Resposta gerada com {ia_usada.upper()}")
         
@@ -380,6 +279,8 @@ def processar_query_usuario(
             "num_contextos": len(contextos_relevantes)
         }
     
+    except (InvalidGroqApiKey, InvalidGoogleApiKey) as e:
+        raise e # Repassa a exceção para a view
     except Exception as e:
         print(f"❌ Erro ao processar query: {e}")
         raise

@@ -1,37 +1,55 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .utils import processar_query_usuario, salvar_contexto_usuario, init_firebase
+from .utils import processar_query_usuario, salvar_contexto_usuario, init_firebase, InvalidGroqApiKey, InvalidGoogleApiKey
 import traceback
+
+# Simulação de rastreamento de uso em memória (para desenvolvimento)
+# Em produção, isso deve ser substituído por uma contagem no Firestore.
+usage_tracking = {}
+FREE_TIER_LIMIT = 20
 
 @api_view(['POST'])
 def chat_endpoint(request):
     """
     Endpoint principal do chat
-    
-    Body esperado:
-    {
-        "user_id": "string",
-        "query": "string",
-        "groq_api_key": "string" (opcional)
-    }
     """
     try:
         user_id = request.data.get('user_id')
         query = request.data.get('query')
         groq_api_key = request.data.get('groq_api_key')
-        
+        google_api_key = request.data.get('google_api_key')
+
         if not user_id or not query:
             return Response(
                 {"erro": "'user_id' e 'query' são obrigatórios"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Processa a query
-        resultado = processar_query_usuario(user_id, query, groq_api_key)
+
+        has_own_key = groq_api_key or google_api_key
+        if not has_own_key:
+            usage_tracking.setdefault(user_id, 0)
+            if usage_tracking[user_id] >= FREE_TIER_LIMIT:
+                return Response(
+                    {"error": "USAGE_LIMIT_EXCEEDED"},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+            usage_tracking[user_id] += 1
+
+        resultado = processar_query_usuario(user_id, query, groq_api_key, google_api_key)
         
         return Response(resultado, status=status.HTTP_200_OK)
     
+    except InvalidGroqApiKey:
+        return Response(
+            {"error": "INVALID_API_KEY", "provider": "groq"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    except InvalidGoogleApiKey:
+        return Response(
+            {"error": "INVALID_API_KEY", "provider": "google"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     except Exception as e:
         print(f"❌ Erro no endpoint: {e}")
         traceback.print_exc()

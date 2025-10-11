@@ -13,13 +13,13 @@ SenseiDB é um assistente de IA personalizado que aprende com você através de 
 - 🌐 **Google AI**: Fallback automático com Gemini 1.5
 - 🔐 **Segurança**: Autenticação Firebase + dados protegidos
 - 🎯 **Personalização**: O Sensei aprende com seus contextos
-- 📱 **Responsivo**: Interface moderna em Streamlit
+- 📱 **Responsivo**: Interface moderna em HTML, CSS e JavaScript
 
 ## 🏗️ Arquitetura
 
 ```
 ┌─────────────────┐
-│   Streamlit     │  Frontend (Python)
+│   HTML/CSS/JS   │  Frontend (Estático)
 │   (Frontend)    │
 └────────┬────────┘
          │ HTTP/REST
@@ -42,85 +42,47 @@ SenseiDB é um assistente de IA personalizado que aprende com você através de 
 ### Pré-requisitos
 
 - Python 3.8+
-- Conta Google Cloud
+- Conta Google Cloud com um projeto criado
 - Conta Firebase
 - API Keys: Google AI + Groq (opcional)
 
-### Instalação Rápida
+### Instalação Local
 
-```bash
-# Clone o repositório
-git clone <seu-repo>
-cd Agente_AI
+1.  **Clone o repositório:**
+    ```bash
+    git clone <seu-repo>
+    cd senseidb-agent
+    ```
 
-# Execute o setup
-chmod +x setup_project.sh
-./setup_project.sh
+2.  **Configure o Backend (Django):**
+    ```bash
+    cd backend
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    ```
 
-# Configure as chaves
-cp functions/.env.example functions/.env
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-# Edite os arquivos com suas chaves reais
+3.  **Configure as Variáveis de Ambiente:**
+    *   Crie um arquivo `.env` na pasta `backend` e adicione suas chaves de API (ex: `GOOGLE_API_KEY`, `GROQ_API_KEY`, `ADMIN_USER_ID`).
 
-# Inicie o desenvolvimento
-make start
-# ou
-./start_dev.sh
-```
+4.  **Rode o Servidor de Desenvolvimento:**
+    ```bash
+    python3 manage.py runserver
+    ```
+    O backend estará rodando em `http://localhost:8000`.
 
-## 📚 Documentação Completa
-
-Veja [SETUP_GUIDE.md](SETUP_GUIDE.md) para instruções detalhadas.
-
-## 🛠️ Comandos Disponíveis
-
-```bash
-make setup    # Configuração inicial
-make check    # Verifica configuração
-make start    # Inicia desenvolvimento
-make test     # Executa testes
-make deploy   # Deploy para Cloud
-make clean    # Limpa temporários
-```
+5.  **Abra o Frontend:**
+    *   Abra o arquivo `frontend/index.html` diretamente no seu navegador.
 
 ## 🔧 Tecnologias
 
-- **Frontend**: Streamlit 1.29
-- **Backend**: Django 4.2 + DRF
+- **Frontend**: HTML, CSS, JavaScript
+- **Backend**: Django, Django Rest Framework
 - **Database**: Firebase Firestore
 - **Auth**: Firebase Authentication
 - **AI**: Groq (Llama 3.3) + Google (Gemini 1.5)
 - **Embeddings**: Google text-embedding-004
-- **Deploy**: Google Cloud Run
-
-## 📖 Como Usar
-
-1. **Login/Cadastro**: Crie sua conta ou faça login
-2. **Configure API**: Insira sua chave Groq ou use Google AI
-3. **Adicione Contextos**: Salve informações sobre você
-4. **Converse**: Interaja com o Sensei!
-
-## 🤝 Integração com Django
-
-Para integrar com outro projeto Django:
-
-```python
-# settings.py
-INSTALLED_APPS = [
-    # ... suas apps
-    'agent',  # Adicione a app do SenseiDB
-]
-
-# urls.py
-urlpatterns = [
-    # ... suas urls
-    path('senseidb/', include('agent.urls')),
-]
-```
-
-## 🐛 Troubleshooting
-
-Veja a seção de Troubleshooting no [SETUP_GUIDE.md](SETUP_GUIDE.md).
+- **Deploy**: Google Cloud Run com GitHub Actions CI/CD
 
 ## 📝 License
 
@@ -130,9 +92,3 @@ MIT License - veja LICENSE para detalhes
 
 **CDK Tech**  
 contato@cdkteck.com.br
-
----
-
-**Versão:** 3.0  
-**Status:** Production Ready
-pip install google-generativeai==0.3.2

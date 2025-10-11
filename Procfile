@@ -1,1 +1,1 @@
-web: functions-framework --source=backend/main.py --target=senseidb_agent
+web: gunicorn senseidb_backend.wsgi --log-file -
