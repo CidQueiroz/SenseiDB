@@ -6,3 +6,4 @@ firebase-admin
 google.generativeai
 groq
 numpy
+google

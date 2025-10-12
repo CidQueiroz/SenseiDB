@@ -178,13 +178,17 @@ def gerar_resposta_groq(prompt: str, api_key: str, model: str = "llama-3.1-8b-in
     except Exception as e:
         return None, str(e)
 
-def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name: str = "gemini-1.5-flash") -> Tuple[Optional[str], Optional[str]]:
+def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name: str = "gemini-2.5-pro") -> Tuple[Optional[str], Optional[str]]:
     """Gera resposta usando Google AI, com chave de API opcional."""
     try:
-        transport = None
         if api_key:
-            transport = genai.transport.RESTTransport(credentials=genai.credentials.ApoCredentials(api_key))
-        model = genai.GenerativeModel(model_name, transport=transport)
+            # Configura a API key apenas para esta chamada se fornecida
+            temp_genai = genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(model_name)
+        else:
+            # Usa a configuração padrão do ambiente (Service Account)
+            model = genai.GenerativeModel(model_name)
+        
         response = model.generate_content(prompt)
         return response.text, None
     except Exception as e:
