@@ -1,0 +1,19 @@
+# Ambientes Virtuais
+venv/
+.venv/
+backend/venv/
+
+# Caches do Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Arquivos de IDE e sistema
+.vscode/
+.idea/
+.DS_Store
+
+# Caches de teste e cobertura
+.pytest_cache/
+.coverage
+htmlcov/

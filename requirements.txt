@@ -1,9 +1,12 @@
 django
-dotenv
 djangorestframework
 django-cors-headers
+python-dotenv
 firebase-admin
-google.generativeai
+google-generativeai
 groq
+gunicorn
 numpy
-google
+protobuf
+requests
+pytest
