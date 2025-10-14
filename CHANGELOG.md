@@ -1,3 +1,10 @@
+## [3.1.3](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.2...v3.1.3) (2025-10-14)
+
+
+### Bug Fixes
+
+* **component deploy.yml:** correção do deploy para representar a versão correta do app ([ced92b7](https://github.com/CidQueiroz/SenseiDB/commit/ced92b707df53fc31c7b0ce433d6b7da6a9970ff))
+
 ## [3.1.2](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.1...v3.1.2) (2025-10-14)
 
 
