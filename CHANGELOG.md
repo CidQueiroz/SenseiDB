@@ -1,3 +1,17 @@
+# [3.1.0](https://github.com/CidQueiroz/SenseiDB/compare/v3.0.0...v3.1.0) (2025-10-14)
+
+
+### Bug Fixes
+
+* **component release.yml:** corrigindo fix de versionamento ([4538059](https://github.com/CidQueiroz/SenseiDB/commit/4538059ff09f3059d84fb0ae8b20f1e64b95ef84))
+* **component release.yml:** corrigindo fix de versionamento ([5d114ed](https://github.com/CidQueiroz/SenseiDB/commit/5d114ed1b972ab27686e47b36b6b71fa8e75435f))
+* **component releaserc.json:** corrigindo versionamento ([452c4bf](https://github.com/CidQueiroz/SenseiDB/commit/452c4bf4ec67c2d37c11db1f942b432f6a95db2d))
+
+
+### Features
+
+* dynamically update version in html and readme ([de4eb35](https://github.com/CidQueiroz/SenseiDB/commit/de4eb350ad1413dab7f062f05d781951a715ccf7))
+
 # 1.0.0 (2025-10-13)
 
 
