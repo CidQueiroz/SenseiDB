@@ -7,13 +7,13 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "sed -i 's/SenseiDB v[0-9.]+/SenseiDB v${nextRelease.version}/g' README.md && sed -i 's/v3.0 - Mentor IA Adaptativo/v${nextRelease.version} - Mentor IA Adaptativo/g' frontend/index.html"
+        "prepareCmd": "sed -i 's/SenseiDB v[0-9.]+/SenseiDB v${nextRelease.version}/g' README.md && sed -i 's/v[0-9.]\+ - Mentor IA Adaptativo/v${nextRelease.version} - Mentor IA Adaptativo/g' frontend/index.html && echo __version__ = \"${nextRelease.version}\" > backend/senseidb_backend/_version.py"
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "package.json", "README.md", "frontend/index.html"],
+        "assets": ["CHANGELOG.md", "package.json", "README.md", "frontend/index.html", "backend/senseidb_backend/_version.py"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
