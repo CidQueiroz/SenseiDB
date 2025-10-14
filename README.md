@@ -71,3 +71,4 @@ Este projeto usa [Conventional Commits](https://www.conventionalcommits.org/) pa
   ```
 - Siga as instruções para descrever sua alteração.
 - Ao fazer `git push` para a branch `main`, uma nova versão será criada automaticamente se sua contribuição for um `feat` ou `fix`.
+- O número da versão no `index.html` e no `_version.py` do backend também é atualizado dinamicamente durante esse processo.
