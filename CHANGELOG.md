@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.0...v3.1.1) (2025-10-14)
+
+
+### Bug Fixes
+
+* **component releaserc.json): feat(ci:** adiciona index.html a uma atualização dinamica de versao ([c29908d](https://github.com/CidQueiroz/SenseiDB/commit/c29908dd319435e85d2b2bdd7cf9a4875fb022a2))
+
 # [3.1.0](https://github.com/CidQueiroz/SenseiDB/compare/v3.0.0...v3.1.0) (2025-10-14)
 
 
