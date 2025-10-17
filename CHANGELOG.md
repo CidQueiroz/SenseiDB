@@ -1,3 +1,10 @@
+## [3.1.5](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.4...v3.1.5) (2025-10-17)
+
+
+### Bug Fixes
+
+* **ci:** ensure deploy runs after release ([1deb062](https://github.com/CidQueiroz/SenseiDB/commit/1deb0624853f14b0fde5ba2a404d82566d82c703))
+
 ## [3.1.4](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.3...v3.1.4) (2025-10-17)
 
 
