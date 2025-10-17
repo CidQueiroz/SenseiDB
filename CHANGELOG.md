@@ -1,3 +1,10 @@
+## [3.1.6](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.5...v3.1.6) (2025-10-17)
+
+
+### Bug Fixes
+
+* **ci:** add permissions to trigger deploy workflow ([6954f05](https://github.com/CidQueiroz/SenseiDB/commit/6954f0551230b7044c885f0e9871db62166ddb3f))
+
 ## [3.1.5](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.4...v3.1.5) (2025-10-17)
 
 
