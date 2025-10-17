@@ -1,3 +1,10 @@
+## [3.1.4](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.3...v3.1.4) (2025-10-17)
+
+
+### Bug Fixes
+
+* **component groq ai:** correção de fallback para a aplicação do groq, google user e google padrao ([f1a863d](https://github.com/CidQueiroz/SenseiDB/commit/f1a863d53fad3de065986ccad3b913f2a77c72a4))
+
 ## [3.1.3](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.2...v3.1.3) (2025-10-14)
 
 

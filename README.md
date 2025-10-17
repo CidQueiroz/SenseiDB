@@ -1,4 +1,4 @@
-# 🧠 SenseiDB v3.1.3
+# 🧠 SenseiDB v3.1.4
 
 > Seu Mentor Estratégico Pessoal com IA
 
