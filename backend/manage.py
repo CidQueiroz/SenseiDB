@@ -1,6 +1,11 @@
 #!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
 import os
 import sys
+print("="*50)
+print(f"DEBUG: GOOGLE_APPLICATION_CREDENTIALS = {os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')}")
+print("="*50)
+
 
 def main():
     """Run administrative tasks."""
