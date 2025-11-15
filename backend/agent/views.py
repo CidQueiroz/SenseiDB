@@ -79,7 +79,7 @@ def salvar_contexto_endpoint(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        sucesso = salvar_contexto_usuario(user_id, contexto)
+        sucesso, erro_msg = salvar_contexto_usuario(user_id, contexto)
         
         if sucesso:
             return Response(
@@ -87,8 +87,9 @@ def salvar_contexto_endpoint(request):
                 status=status.HTTP_200_OK
             )
         else:
+            # Inclui a mensagem de erro detalhada para facilitar o debug no frontend
             return Response(
-                {"erro": "Falha ao salvar contexto"},
+                {"erro": "Falha ao salvar contexto.", "detalhes": erro_msg},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     

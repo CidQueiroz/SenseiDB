@@ -26,45 +26,33 @@ _db = None
 
 def init_firebase() -> Optional[firestore.Client]:
     """
-    Inicializa Firebase Admin e Google AI SDK uma única vez
+    Inicializa o Firebase Admin SDK.
+    Em um ambiente Google Cloud (como Cloud Run), as credenciais são detectadas
+    automaticamente a partir da conta de serviço do ambiente.
     """
     global _firebase_initialized, _db
     if not _firebase_initialized:
         try:
-            # Firebase - Usa GOOGLE_APPLICATION_CREDENTIALS do ambiente
-            google_creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-            
-            if google_creds_path:
-                print(f"🔑 Usando credenciais de: {google_creds_path}")
-                if not os.path.exists(google_creds_path):
-                    raise FileNotFoundError(f"❌ Arquivo de credenciais não encontrado: {google_creds_path}")
-                cred = credentials.Certificate(google_creds_path)
-            else:
-                # Fallback para o arquivo local (desenvolvimento)
-                current_dir = os.path.dirname(__file__)
-                credentials_path = os.path.join(current_dir, "..", "firebase_credentials.json")
-                print(f"⚠️ GOOGLE_APPLICATION_CREDENTIALS não definido. Usando fallback: {credentials_path}")
-                if not os.path.exists(credentials_path):
-                    raise FileNotFoundError(f"❌ Arquivo de credenciais não encontrado: {credentials_path}")
-                cred = credentials.Certificate(credentials_path)
-            
-            firebase_admin.initialize_app(cred)
+            # Em ambientes Google Cloud, initialize_app() sem argumentos usa as
+            # credenciais do ambiente (Application Default Credentials).
+            print("🔑 Inicializando Firebase...")
+            firebase_admin.initialize_app()
             _db = firestore.client()
-            print("✅ Firebase inicializado com sucesso")
+            print("✅ Firebase inicializado com sucesso.")
 
-            # Google AI
+            # Configura o Google AI SDK (se a chave estiver no ambiente)
             google_api_key = os.environ.get("GOOGLE_API_KEY")
             if google_api_key:
                 genai.configure(api_key=google_api_key)
                 print("✅ Google AI SDK configurado com API Key do ambiente.")
             else:
-                print("⚠️ GOOGLE_API_KEY não encontrada no ambiente. Funções de embedding e IA do Google podem não funcionar.")
+                print("⚠️ GOOGLE_API_KEY não encontrada no ambiente. Funções de embedding podem não funcionar se a conta de serviço não tiver permissão.")
 
             _firebase_initialized = True
         except Exception as e:
-            print(f"❌ Erro ao inicializar serviços: {e}")
-            import traceback
+            print(f"❌ Erro fatal ao inicializar o Firebase: {e}")
             traceback.print_exc()
+            # Lançar a exceção impede que a aplicação continue em um estado inválido.
             raise
     return _db
 
@@ -152,7 +140,7 @@ def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5) -> Lis
 import google.auth
 import traceback
 
-def salvar_contexto_usuario(user_id: str, contexto_texto: str) -> bool:
+def salvar_contexto_usuario(user_id: str, contexto_texto: str) -> Tuple[bool, Optional[str]]:
     """Salva novo contexto com embedding na collection 'inteligencia_critica'"""
     try:
         print("\n--- INICIANDO salvar_contexto_usuario ---")
@@ -196,13 +184,14 @@ def salvar_contexto_usuario(user_id: str, contexto_texto: str) -> bool:
         print(f"LOG: ✅ Contexto salvo com sucesso no Firestore (inteligencia_critica) para o user_id: {user_id}")
         
         print("--- FIM salvar_contexto_usuario ---\n")
-        return True
+        return True, None
         
     except Exception as e:
-        print(f"❌ Erro em salvar_contexto_usuario: {e}")
+        error_message = f"Erro detalhado: {e}"
+        print(f"❌ Erro em salvar_contexto_usuario: {error_message}")
         traceback.print_exc()
         print("--- FIM salvar_contexto_usuario (COM ERRO) ---\n")
-        return False
+        return False, error_message
 
 # ============================================ 
 # FUNÇÕES DE GERAÇÃO DE RESPOSTA
