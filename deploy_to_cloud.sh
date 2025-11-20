@@ -43,7 +43,7 @@ gcloud run deploy senseidb-agent \
     --region $REGION \
     --allow-unauthenticated \
     --clear-base-image \
-    --set-env-vars="GOOGLE_API_KEY=$GOOGLE_API_KEY,GROQ_API_KEY=$GROQ_API_KEY,DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY,DEBUG=False" \
+    --set-env-vars="GOOGLE_API_KEY=$GOOGLE_API_KEY,GROQ_API_KEY=$GROQ_API_KEY,DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY,DEBUG=False,ADMIN_USER_ID=$ADMIN_USER_ID" \
     --memory 1Gi \
     --cpu 1 \
     --min-instances 0 \

@@ -1,12 +1,19 @@
 {
   "projects": {
-    "default": "senseidb-rebranding"
+    "default": "cdkteck-hub"
   },
   "targets": {
     "senseidb-rebranding": {
       "hosting": {
         "senseidb": [
           "senseidb"
+        ]
+      }
+    },
+    "cdkteck-hub": {
+      "hosting": {
+        "senseidb-agent": [
+          "senseidb-agent"
         ]
       }
     }
