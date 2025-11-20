@@ -1,3 +1,26 @@
+# [4.0.0](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.5...v4.0.0) (2025-11-20)
+
+
+### Bug Fixes
+
+* **ci:** add permissions to trigger deploy workflow ([6954f05](https://github.com/CidQueiroz/SenseiDB/commit/6954f0551230b7044c885f0e9871db62166ddb3f))
+* **utils:** melhorar inicialização do Firebase e tratamento de erros ([000972f](https://github.com/CidQueiroz/SenseiDB/commit/000972fe1691bca66983f8ec31deb9af5fc1324e))
+
+
+### Code Refactoring
+
+* **filename:** unificando projeto no firebase ([c7a41e9](https://github.com/CidQueiroz/SenseiDB/commit/c7a41e9c3caec8845301287674b639976f80e263))
+
+
+### Features
+
+* **docs:** adicionar documentação inicial do projeto SenseiDB ([b94e1b4](https://github.com/CidQueiroz/SenseiDB/commit/b94e1b42da4a8cbca8d53126dce5e67d18153440))
+
+
+### BREAKING CHANGES
+
+* **filename:** Transformando CDKTECK em um unico projeto dentro do Firebase
+
 ## [3.1.5](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.4...v3.1.5) (2025-10-17)
 
 
