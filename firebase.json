@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "target": "senseidb",
+    "target": "senseidb-agent",
     "public": "frontend",
     "ignore": [
       "firebase.json",
