@@ -2,6 +2,25 @@
 
 > Seu Mentor Estratégico Pessoal com IA
 
+<div align="center">
+
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+
+[**Portfólio CDKTeck**](https://www.cdkteck.com.br) | [**LinkedIn do Autor**](https://www.linkedin.com/in/ciddy-queiroz/)
+
+<br />
+</div>
+
 ## 📋 Sobre o Projeto
 
 SenseiDB é um assistente de IA personalizado que aprende com você através de um sistema RAG (Retrieval-Augmented Generation). Ele usa seus contextos salvos para fornecer respostas adaptadas ao seu perfil e necessidades.
@@ -17,16 +36,11 @@ SenseiDB é um assistente de IA personalizado que aprende com você através de 
 
 ## 🛠️ Tech Stack
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
+Este projeto usa as seguintes tecnologias:
+
+*   **Frontend**: HTML5, CSS3, JavaScript
+*   **Backend**: Python, Django
+*   **Serviços**: Docker, Firebase, Google Cloud, Nginx
 
 ## 🚀 Ambiente de Desenvolvimento
 
@@ -41,7 +55,7 @@ Este projeto usa Docker e Docker Compose para criar um ambiente de desenvolvimen
 
 1.  **Clone o repositório:**
     ```bash
-    git clone <seu-repo>
+    git clone https://github.com/CidQueiroz/SenseiDB.git
     cd senseidb-agent
     ```
 
@@ -72,3 +86,21 @@ Este projeto usa [Conventional Commits](https://www.conventionalcommits.org/) pa
 - Siga as instruções para descrever sua alteração.
 - Ao fazer `git push` para a branch `main`, uma nova versão será criada automaticamente se sua contribuição for um `feat` ou `fix`.
 - O número da versão no `index.html` e no `_version.py` do backend também é atualizado dinamicamente durante esse processo.
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 👨‍💻 Autor
+
+<img src="https://github.com/CidQueiroz.png" width="100px;" alt="Foto de Cidirclay"/>
+**Cidirclay Queiroz** <br>
+Solutions Architect AI | MLOps Engineer | OCI Specialist
+
+[LinkedIn](https://www.linkedin.com/in/ciddy-queiroz/) | [Website](https://cdkteck.com.br/) | [Email](mailto:cydy.queiroz@cdkteck.com.br) | [Instagram](https://www.instagram.com/ciddyqueiroz/)
+
+Especialista em transformar problemas de negócio complexos em soluções escaláveis na nuvem. Focado em Arquitetura Multi-Cloud e Engenharia de IA Generativa.
