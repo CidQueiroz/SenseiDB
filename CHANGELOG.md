@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/CidQueiroz/SenseiDB/compare/v4.0.0...v4.1.0) (2025-11-20)
+
+
+### Features
+
+* standardize README and add LICENSE ([e2ef0a8](https://github.com/CidQueiroz/SenseiDB/commit/e2ef0a86b905c62a92adaa9442710f825c4b9d0b))
+
 # [4.0.0](https://github.com/CidQueiroz/SenseiDB/compare/v3.1.5...v4.0.0) (2025-11-20)
 
 

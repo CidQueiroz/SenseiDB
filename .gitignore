@@ -78,3 +78,6 @@ tests/
 gcp-key.json
 tokem_git
 teste.py
+
+*:Zone.Identifierbackend/firebase_credentials.json
+backend/firebase_credentials.json
