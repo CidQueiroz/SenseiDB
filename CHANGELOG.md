@@ -1,3 +1,16 @@
+# [4.2.0](https://github.com/CidQueiroz/SenseiDB/compare/v4.1.0...v4.2.0) (2025-11-21)
+
+
+### Bug Fixes
+
+* regenera package-lock.json do zero ([b812dca](https://github.com/CidQueiroz/SenseiDB/commit/b812dcae660b7f526c095918c4eeecf3401c0c8f))
+* sincroniza package-lock.json ([f201078](https://github.com/CidQueiroz/SenseiDB/commit/f201078f7ee51b7e653a781960427eb3d99d7dc7))
+
+
+### Features
+
+* configura deploy para cdkteck-hub ([5d5a7a0](https://github.com/CidQueiroz/SenseiDB/commit/5d5a7a0586c29085ad5f86d6bc659d403d142831))
+
 # [4.1.0](https://github.com/CidQueiroz/SenseiDB/compare/v4.0.0...v4.1.0) (2025-11-20)
 
 
