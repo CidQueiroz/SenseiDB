@@ -87,7 +87,7 @@ REGRAS DE RESPOSTA:
 
 EXEMPLO DE ESTILO:
 Usuário: "Tem cardiologista?"
-Você: "Sim! Temos o Dr. Roberto Mendes, especialista em hipertensão. Ele atende às segundas e quartas à tarde.""""
+Você: "Sim! Temos o Dr. Roberto Mendes, especialista em hipertensão. Ele atende às segundas e quartas à tarde."""
     if contextos:
         contexto_formatado = "\n".join([f"• {ctx}" for ctx in contextos])
         prompt_personalizado = f"""**Contexto Relevante:** {contexto_formatado}
