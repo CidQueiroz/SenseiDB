@@ -87,12 +87,7 @@ def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
     """
     Seleciona e carrega a persona correta baseada no usuário,
     injetando o contexto do RAG.
-    """
-    
-    # 1. Lógica de Seleção de Papel (O "Router")
-    # Aqui você define quem vê o quê.
-    # No futuro, isso pode vir de um campo 'role' no Firestore do usuário.
-    
+    """   
     # 1. Lógica de Seleção de Papel
     if user_id == "sensei@cdkteck.com.br" or user_id == "w4qlo3Q5v8USDkQwuzCzPKL75Au2":
         print(f"[DEBUG RAG] Condição IF atendida: Selecionando RECEPCIONISTA", file=sys.stderr)
