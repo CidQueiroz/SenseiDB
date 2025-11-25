@@ -1,9 +1,9 @@
-name: Deploy to Cloud Run
+# .github/workflows/deploy-full.yml
+name: Deploy Full Stack
 
 on:
-  release:
-    types: [published]
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -11,11 +11,40 @@ env:
   REGION: southamerica-east1
 
 jobs:
-  deploy:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      actions: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci  # ← REMOVENDO o NODE_AUTH_TOKEN
+
+      - name: Run semantic-release
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-backend:
+    name: Deploy Backend
+    needs: release
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
       id-token: 'write'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -24,16 +53,19 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-          token_format: 'access_token'
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Create Artifact Registry repository
         run: |
-            gcloud artifacts repositories create ${{ env.SERVICE_NAME }}-repo \
-            --repository-format=docker --location=${{ env.REGION }} \
-            --description="Docker repository for ${{ env.SERVICE_NAME }}" || echo "Repository already exists or failed to create"
+          gcloud artifacts repositories create ${{ env.SERVICE_NAME }}-repo \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --description="Docker repository for ${{ env.SERVICE_NAME }}" || echo "Repository already exists"
 
       - name: Configure Docker
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
@@ -49,20 +81,24 @@ jobs:
             --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}-repo/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --region=${{ env.REGION }} \
             --platform=managed \
-            --allow-unauthenticated \
-            --memory=1Gi \
-            --cpu=1
+            --allow-unauthenticated
 
-      - name: Setup Node.js for Frontend
-        if: false  # ← Desabilitar por enquanto
+  deploy-frontend:
+    name: Deploy Frontend
+    needs: release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install Frontend Dependencies
-        run: npm install
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+      - name: Install dependencies
+        run: npm install  # ← REMOVENDO o NODE_AUTH_TOKEN
       
       - name: Build Frontend
         run: npm run build
