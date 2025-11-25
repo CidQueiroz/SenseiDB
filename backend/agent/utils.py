@@ -88,7 +88,7 @@ def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
     # Aqui você define quem vê o quê.
     # No futuro, isso pode vir de um campo 'role' no Firestore do usuário.
     
-    if user_id == "sensei@cdkteck.com.br" or user_id == "ID_DO_CLIENTE_DA_CLINICA":
+    if user_id == "sensei@cdkteck.com.br" or user_id == "w4qlo3Q5v8USDkQwuZCzPKL75Au2":
         arquivo_persona = "recepcionista_vitalita.txt"
     else:
         # Padrão para você e outros usuários
@@ -335,7 +335,7 @@ def processar_query_usuario(
         else:
             print("⚠️ Nenhum contexto encontrado")
         
-        prompt_sistema = gerar_prompt_sistema(contextos_relevantes)
+        prompt_sistema = gerar_prompt_sistema(contextos_relevantes, user_id)
         prompt_final = f"""{prompt_sistema}
 
         ---
