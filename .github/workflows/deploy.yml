@@ -13,6 +13,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -21,16 +24,16 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
+          token_format: 'access_token'
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
 
       - name: Create Artifact Registry repository
         run: |
-          gcloud artifacts repositories create ${{ env.SERVICE_NAME }}-repo \
-            --repository-format=docker \
-            --location=${{ env.REGION }} \
-            --description="Docker repository for senseidb-agent" || true
+            gcloud artifacts repositories create ${{ env.SERVICE_NAME }}-repo \
+            --repository-format=docker --location=${{ env.REGION }} \
+            --description="Docker repository for ${{ env.SERVICE_NAME }}" || echo "Repository already exists or failed to create"
 
       - name: Configure Docker
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
@@ -46,10 +49,13 @@ jobs:
             --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}-repo/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --region=${{ env.REGION }} \
             --platform=managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --memory=1Gi \
+            --cpu=1
 
       - name: Setup Node.js for Frontend
-        uses: actions/setup-node@v3
+        if: false  # ← Desabilitar por enquanto
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
