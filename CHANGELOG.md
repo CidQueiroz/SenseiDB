@@ -1,3 +1,10 @@
+## [4.2.2](https://github.com/CidQueiroz/SenseiDB/compare/v4.2.1...v4.2.2) (2025-11-25)
+
+
+### Bug Fixes
+
+* **utils:** corrigindo aspas de utils.py ([f62e2ab](https://github.com/CidQueiroz/SenseiDB/commit/f62e2abeff121f4536d1b61d1ef0ef6873b6dba7))
+
 ## [4.2.1](https://github.com/CidQueiroz/SenseiDB/compare/v4.2.0...v4.2.1) (2025-11-25)
 
 
