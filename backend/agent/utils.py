@@ -8,6 +8,7 @@ import numpy as np
 import requests
 import google.auth
 import traceback
+import sys
 
 # Exceções personalizadas para erros de chave de API
 class InvalidGroqApiKey(Exception):
