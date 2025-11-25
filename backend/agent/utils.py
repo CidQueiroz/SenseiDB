@@ -79,6 +79,10 @@ print(ADMIN_USER_ID)
 # ============================================ 
 
 def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
+    # --- DEBUG LOG START ---
+    print(f"\n[DEBUG RAG] === INICIO GERACAO PROMPT ===", file=sys.stderr)
+    print(f"[DEBUG RAG] User ID recebido: '{user_id}'", file=sys.stderr)
+    # --- DEBUG LOG END ---
     """
     Seleciona e carrega a persona correta baseada no usuário,
     injetando o contexto do RAG.
@@ -88,28 +92,35 @@ def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
     # Aqui você define quem vê o quê.
     # No futuro, isso pode vir de um campo 'role' no Firestore do usuário.
     
-    if user_id == "sensei@cdkteck.com.br" or user_id == "w4qlo3Q5v8USDkQwuZCzPKL75Au2":
+    # 1. Lógica de Seleção de Papel
+    if user_id == "sensei@cdkteck.com.br" or user_id == "w4qlo3Q5v8USDkQwuzCzPKL75Au2":
+        print(f"[DEBUG RAG] Condição IF atendida: Selecionando RECEPCIONISTA", file=sys.stderr)
         arquivo_persona = "recepcionista_vitalita.txt"
     else:
-        # Padrão para você e outros usuários
+        print(f"[DEBUG RAG] Condição ELSE (Padrão): Selecionando MENTOR", file=sys.stderr)
         arquivo_persona = "mentor_sensei.txt"
 
     # 2. Carregamento do Texto
     prompt_base = carregar_persona(arquivo_persona)
 
+    # --- DEBUG LOG CONTENT ---
+    print(f"[DEBUG RAG] Arquivo carregado: {arquivo_persona}", file=sys.stderr)
+    print(f"[DEBUG RAG] Primeiros 200 chars do prompt carregado:\n{prompt_base[:200]}", file=sys.stderr)
+    print(f"[DEBUG RAG] =================================\n", file=sys.stderr)
+    # --- DEBUG LOG END ---
+
     # 3. Injeção de Contexto (RAG)
     if contextos:
         contexto_formatado = "\n".join([f"• {ctx}" for ctx in contextos])
-        prompt_final = f"""**CONTEXTO RELEVANTE (RAG):**
-        {contexto_formatado}
+        prompt_final = f"""{prompt_base}
 
-        ---
+**CONTEXTO RELEVANTE (RAG):**
+{contexto_formatado}"""
+    else:
+        prompt_final = prompt_base
 
-        {prompt_base}
-        """
-        return prompt_final
+    return prompt_final
     
-    return prompt_base
     
 # ============================================ 
 # FUNÇÕES DE EMBEDDING E BUSCA
