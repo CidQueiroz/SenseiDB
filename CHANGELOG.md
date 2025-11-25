@@ -1,3 +1,10 @@
+## [5.0.3](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.2...v5.0.3) (2025-11-25)
+
+
+### Bug Fixes
+
+* **filename(utils):** Correcao do utils ([2e239e6](https://github.com/CidQueiroz/SenseiDB/commit/2e239e64d1b4cea1fdb788a5d62e5fe2ca858f2f))
+
 ## [5.0.2](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.1...v5.0.2) (2025-11-25)
 
 
