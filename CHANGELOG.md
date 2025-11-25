@@ -1,3 +1,15 @@
+# [5.0.0](https://github.com/CidQueiroz/SenseiDB/compare/v4.2.3...v5.0.0) (2025-11-25)
+
+
+### Features
+
+* **filename:utils:** Adicionando personas ([74a9275](https://github.com/CidQueiroz/SenseiDB/commit/74a9275a51965b0147d45139a6581f9fe0fff854))
+
+
+### BREAKING CHANGES
+
+* **filename:utils:** Criando papeis temporários para venda e para a SaaS, onde o cliente poderá escolher o tipo de personagem que gerará a resposta adaptativa para ele.
+
 ## [4.2.3](https://github.com/CidQueiroz/SenseiDB/compare/v4.2.2...v4.2.3) (2025-11-25)
 
 
