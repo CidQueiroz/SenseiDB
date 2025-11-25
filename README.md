@@ -43,19 +43,19 @@ graph TD
         LLM_API(LLM Provider API)
     end
 
-    UI -- 1. "How does X work?" --> API
-    API -- 2. "How does X work?" --> EmbeddingService
-    EmbeddingService -- 3. [Embedding Vector] --> VectorDB
-    VectorDB -- 4. Returns Relevant Chunks --> API
-    API -- 5. "Context: [Chunks]<br/>Question: How does X work?" --> LLM_Service
-    LLM_Service -- 6. Proxies Prompt --> LLM_API
-    LLM_API -- 7. Generated Answer --> LLM_Service
-    LLM_Service -- 8. Formatted Answer --> API
-    API -- 9. Final Response --> UI
+    UI -- "1. How does X work?" --> API
+    API -- "2. How does X work?" --> EmbeddingService
+    EmbeddingService -- "3. [Embedding Vector]" --> VectorDB
+    VectorDB -- "4. Returns Relevant Chunks" --> API
+    API -- "5. Context: [Chunks]<br/>Question: How does X work?" --> LLM_Service
+    LLM_Service -- "6. Proxies Prompt" --> LLM_API
+    LLM_API -- "7. Generated Answer" --> LLM_Service
+    LLM_Service -- "8. Formatted Answer" --> API
+    API -- "9. Final Response" --> UI
 
     style VectorDB fill:#4285F4,stroke:#fff,stroke-width:2px,color:#fff
     style LLM_Service fill:#34A853,stroke:#fff,stroke-width:2px,color:#fff
-```
+    ```
 
 1.  **Query:** A user asks a question through the React frontend.
 2.  **Embedding:** The Django backend generates a vector embedding of the question.
