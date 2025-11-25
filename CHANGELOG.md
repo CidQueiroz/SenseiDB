@@ -1,3 +1,10 @@
+## [5.0.2](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.1...v5.0.2) (2025-11-25)
+
+
+### Bug Fixes
+
+* **utils:** simplify RAG in user context ([bcf8cd0](https://github.com/CidQueiroz/SenseiDB/commit/bcf8cd0424dfc8d5d8a99b21b8b5674276900137))
+
 ## [5.0.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.0...v5.0.1) (2025-11-25)
 
 
