@@ -10,15 +10,17 @@ import google.auth
 import traceback
 import sys
 
+
 # Exceções personalizadas para erros de chave de API
 class InvalidGroqApiKey(Exception):
     pass
+
 
 class InvalidGoogleApiKey(Exception):
     pass
 
 # ============================================ 
-# CONFIGURAÇÃO
+# CONFIGURAÇÃO E INICIALIZAÇÃO
 # ============================================ 
 
 # Configuração Firebase (singleton)
@@ -75,10 +77,10 @@ def carregar_persona(nome_arquivo: str) -> str:
 # ID do usuário admin
 ADMIN_USER_ID = os.environ.get("ADMIN_USER_ID", "default_admin_id")
 print(ADMIN_USER_ID)
+
 # ============================================ 
 # PROMPT SYSTEM
 # ============================================ 
-
 def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
     # --- DEBUG LOG START ---
     print(f"\n[DEBUG RAG] === INICIO GERACAO PROMPT ===", file=sys.stderr)
@@ -89,7 +91,7 @@ def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
     injetando o contexto do RAG.
     """   
     # 1. Lógica de Seleção de Papel
-    if user_id == "sensei@cdkteck.com.br" or user_id == "w4qlo3Q5v8USDkQwuzCzPKL75Au2":
+    if user_id and (user_id.strip() == "sensei@cdkteck.com.br" or user_id.strip() == "w4qlo3Q5v8USDkQwuzCzPKL75Au2"):
         print(f"[DEBUG RAG] Condição IF atendida: Selecionando RECEPCIONISTA", file=sys.stderr)
         arquivo_persona = "recepcionista_vitalita.txt"
     else:
@@ -116,12 +118,11 @@ def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
         prompt_final = prompt_base
 
     return prompt_final
-    
-    
+
+
 # ============================================ 
 # FUNÇÕES DE EMBEDDING E BUSCA
 # ============================================ 
-
 def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5) -> List[str]:
     """
     Busca contextos mais relevantes usando embeddings
@@ -216,10 +217,10 @@ def salvar_contexto_usuario(user_id: str, contexto_texto: str) -> Tuple[bool, Op
         print("--- FIM salvar_contexto_usuario (COM ERRO) ---\n")
         return False, error_message
 
+
 # ============================================ 
 # FUNÇÕES DE GERAÇÃO DE RESPOSTA
 # ============================================ 
-
 def gerar_resposta_groq(prompt: str, api_key: str, model: str = "llama-3.1-8b-instant") -> Tuple[Optional[str], Optional[str]]:
     """Gera resposta usando Groq via API REST (mais estável que o SDK)"""
     try:
@@ -271,6 +272,7 @@ def gerar_resposta_groq(prompt: str, api_key: str, model: str = "llama-3.1-8b-in
         
         return None, erro_msg
 
+
 def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name: str = "gemini-2.5-pro") -> Tuple[Optional[str], Optional[str]]:
     """Gera resposta usando Google AI, com chave de API opcional."""
     try:
@@ -316,10 +318,10 @@ def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name
         print(f"❌ Erro detalhado em gerar_resposta_google: {e}")
         return None, str(e)
 
+
 # ============================================ 
 # FUNÇÃO PRINCIPAL DE PROCESSAMENTO
 # ============================================ 
-
 def processar_query_usuario(
     user_id: str, 
     query: str, 
@@ -459,3 +461,4 @@ def processar_query_usuario(
     except Exception as e:
         print(f"❌ Erro ao processar query: {e}")
         raise
+
