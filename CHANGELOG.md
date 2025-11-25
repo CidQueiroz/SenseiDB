@@ -1,3 +1,10 @@
+## [4.2.3](https://github.com/CidQueiroz/SenseiDB/compare/v4.2.2...v4.2.3) (2025-11-25)
+
+
+### Bug Fixes
+
+* **deploy.yml:** Corrigindo deploy.yml ([aebefdc](https://github.com/CidQueiroz/SenseiDB/commit/aebefdcf41283a56d29a8e042991273ed47162a0))
+
 ## [4.2.2](https://github.com/CidQueiroz/SenseiDB/compare/v4.2.1...v4.2.2) (2025-11-25)
 
 
