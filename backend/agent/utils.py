@@ -56,6 +56,21 @@ def init_firebase() -> Optional[firestore.Client]:
             raise
     return _db
 
+
+def carregar_persona(nome_arquivo: str) -> str:
+    """Lê o arquivo de texto da persona e retorna o conteúdo."""
+    # Ajuste o caminho base conforme sua estrutura de pastas no servidor
+    base_path = os.path.join(os.path.dirname(__file__), 'personas')
+    file_path = os.path.join(base_path, nome_arquivo)
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        print(f"❌ Erro: Persona {nome_arquivo} não encontrada. Usando padrão.")
+        # Fallback para o Mentor se o arquivo falhar
+        return "VOCÊ É: Um assistente útil..."
+
 # ID do usuário admin
 ADMIN_USER_ID = os.environ.get("ADMIN_USER_ID", "default_admin_id")
 print(ADMIN_USER_ID)
@@ -63,38 +78,38 @@ print(ADMIN_USER_ID)
 # PROMPT SYSTEM
 # ============================================ 
 
-def gerar_prompt_sistema(contextos: List[str]) -> str:
+def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
     """
-    Gera um prompt de sistema personalizado baseado nos contextos do usuário
-    e na doutrina estratégica do Sensei.
+    Seleciona e carrega a persona correta baseada no usuário,
+    injetando o contexto do RAG.
     """
-    custom_prompt = """VOCÊ É: A Assistente Virtual Inteligente da 'Clínica Vitalitá'.
+    
+    # 1. Lógica de Seleção de Papel (O "Router")
+    # Aqui você define quem vê o quê.
+    # No futuro, isso pode vir de um campo 'role' no Firestore do usuário.
+    
+    if user_id == "sensei@cdkteck.com.br" or user_id == "ID_DO_CLIENTE_DA_CLINICA":
+        arquivo_persona = "recepcionista_vitalita.txt"
+    else:
+        # Padrão para você e outros usuários
+        arquivo_persona = "mentor_sensei.txt"
 
-SUA MISSÃO: Atender pacientes com educação, empatia e eficiência, tirando dúvidas sobre horários, médicos, preços e preparos de exames, baseando-se EXCLUSIVAMENTE nas informações fornecidas no seu contexto.
+    # 2. Carregamento do Texto
+    prompt_base = carregar_persona(arquivo_persona)
 
-SEU TOM DE VOZ:
-- Profissional, acolhedor e claro.
-- Use linguagem simples e direta.
-- NUNCA use jargões corporativos, de coaching ou termos técnicos de TI (como "dataset", "contexto", "AMV", "Porto Seguro").
-- Aja como uma secretária humana experiente.
-
-REGRAS DE RESPOSTA:
-1. Se a informação estiver no contexto, responda diretamente.
-2. Se a informação NÃO estiver no contexto, diga educadamente: "Desculpe, não tenho essa informação exata no momento. Por favor, entre em contato com nossa recepção pelo WhatsApp (22) 99999-8888 para que possamos te ajudar melhor."
-3. NUNCA invente informações (não alucine).
-4. Em questões de valores, seja preciso.
-5. Ao final da resposta, sempre se mostre à disposição, mas sem ser repetitiva.
-
-EXEMPLO DE ESTILO:
-Usuário: "Tem cardiologista?"
-Você: "Sim! Temos o Dr. Roberto Mendes, especialista em hipertensão. Ele atende às segundas e quartas à tarde."""
+    # 3. Injeção de Contexto (RAG)
     if contextos:
         contexto_formatado = "\n".join([f"• {ctx}" for ctx in contextos])
-        prompt_personalizado = f"""**Contexto Relevante:** {contexto_formatado}
+        prompt_final = f"""**CONTEXTO RELEVANTE (RAG):**
+        {contexto_formatado}
 
----
-"""
-        return prompt_personalizado + custom_prompt
+        ---
+
+        {prompt_base}
+        """
+        return prompt_final
+    
+    return prompt_base
     
 # ============================================ 
 # FUNÇÕES DE EMBEDDING E BUSCA
@@ -332,8 +347,8 @@ def processar_query_usuario(
 
         **INSTRUÇÕES FINAIS:**
         - Responda em português do Brasil
-        - Use markdown para formatação (negrito, listas, etc)
         - Seja conciso mas completo
+        - Use markdown para formatação (negrito, listas, etc)
         - Termine com uma pergunta reflexiva ou próximo passo claro
         """
         
