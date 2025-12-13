@@ -57,17 +57,22 @@ WSGI_APPLICATION = 'senseidb_backend.wsgi.application'
 
 # CORS Settings
 # DEVELOPMENT ONLY: Allow all origins to diagnose CORS issues.
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 
-# CORS_ALLOWED_ORIGINS = [
-#     # Ambiente de Desenvolvimento
-#     "http://127.0.0.1:5500",
-#     "http://localhost:5500",
-#     # Domínios de Produção
-#     "https://senseidb-rebranding.web.app",
-#     "https://senseidb-rebranding.firebaseapp.com",
-#     "https://sensei.cdkteck.com.br",
-# ]
+CORS_ALLOWED_ORIGINS = [
+    # Ambiente de Desenvolvimento
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    # Domínios de Produção
+    "https://senseidb-rebranding.web.app",
+    "https://senseidb-rebranding.firebaseapp.com",
+    "https://sensei.cdkteck.com.br",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://sensei.cdkteck.com.br",
+]
+
 # Database (SQLite para desenvolvimento, Cloud SQL para produção)
 DATABASES = {
     'default': {
