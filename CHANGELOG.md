@@ -1,3 +1,11 @@
+## [5.0.4](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.3...v5.0.4) (2025-12-13)
+
+
+### Bug Fixes
+
+* **package:** corrigindo package ([020690e](https://github.com/CidQueiroz/SenseiDB/commit/020690e3b32a28036a2050405de8893c57f556af))
+* **settings:** correção do CORS ([0eb6a9b](https://github.com/CidQueiroz/SenseiDB/commit/0eb6a9bf2dfea6aa62caf6e82d42c1f63786896c))
+
 ## [5.0.3](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.2...v5.0.3) (2025-11-25)
 
 
