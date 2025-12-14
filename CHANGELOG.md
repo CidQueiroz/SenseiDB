@@ -1,3 +1,10 @@
+## [5.0.5](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.4...v5.0.5) (2025-12-14)
+
+
+### Bug Fixes
+
+* **index:** correcao do index.html ([e69f3b0](https://github.com/CidQueiroz/SenseiDB/commit/e69f3b08984090b6e18979655ebfb5b919c76b1c))
+
 ## [5.0.4](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.3...v5.0.4) (2025-12-13)
 
 
