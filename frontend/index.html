@@ -774,24 +774,33 @@
         <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
         <script>
-            // Firebase Config
+            // Import the functions you need from the SDKs you need
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+            import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+            // TODO: Add SDKs for Firebase products that you want to use
+            // https://firebase.google.com/docs/web/setup#available-libraries
+
+            // Your web app's Firebase configuration
+            // For Firebase JS SDK v7.20.0 and later, measurementId is optional
             const firebaseConfig = {
-                apiKey: "AIzaSyDlL3WdqovyACEMI1M1-q82ei43PtQqlIw",
-                authDomain: "senseidb-rebranding.firebaseapp.com",
-                projectId: "senseidb-rebranding",
-                storageBucket: "senseidb-rebranding.firebasestorage.app",
-                messagingSenderId: "1022880460923",
-                appId: "1:1022880460923:web:6605c05d9c5b0528fbb2de"
+                apiKey: "AIzaSyAAqeBcWQechliUfEFodQSJWTV3RtvOqGo",
+                authDomain: "cdkteck-hub.firebaseapp.com",
+                projectId: "cdkteck-hub",
+                storageBucket: "cdkteck-hub.firebasestorage.app",
+                messagingSenderId: "402043888600",
+                appId: "1:402043888600:web:c29a42be4ab86a22d748ad",
+                measurementId: "G-HTDZ2S5HFC"
             };
 
-            firebase.initializeApp(firebaseConfig);
-            const auth = firebase.auth();
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
 
             // Define a URL do backend baseando-se no ambiente (desenvolvimento local vs. produção)
             const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
             const BACKEND_URL = isLocal 
                 ? 'http://localhost:8000/api' 
-                : 'https://senseidb-agent-1022880460923.southamerica-east1.run.app/api';
+                : 'https://senseidb-agent-402043888600.southamerica-east1.run.app/api';
 
             // State
             let currentUser = null;
