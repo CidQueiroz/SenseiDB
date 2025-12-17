@@ -81,7 +81,10 @@ jobs:
             --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}-repo/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             --region=${{ env.REGION }} \
             --platform=managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }},GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-key.json" \
+            --set-secrets="gcp-key.json=${{ secrets.GCP_SA_KEY }}:latest" \
+            --service-account=${{ secrets.GCP_SA_EMAIL }}
 
   deploy-frontend:
     name: Deploy Frontend
