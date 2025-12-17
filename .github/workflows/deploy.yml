@@ -82,8 +82,7 @@ jobs:
             --region=${{ env.REGION }} \
             --platform=managed \
             --allow-unauthenticated \
-            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }},GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-key.json" \
-            --set-secrets="gcp-key.json=${{ secrets.GCP_SA_KEY }}:latest" \
+            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }}" \
             --service-account=${{ secrets.GCP_SA_EMAIL }}
 
   deploy-frontend:

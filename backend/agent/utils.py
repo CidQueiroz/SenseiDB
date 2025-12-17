@@ -38,15 +38,9 @@ def init_firebase() -> Optional[firestore.Client]:
         try:
             print("🔑 Inicializando Firebase...")
             
-            # Tenta usar credenciais explícitas se o arquivo existir
-            cred_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
-            if cred_path and os.path.exists(cred_path):
-                print(f"📄 Usando credenciais do arquivo: {cred_path}")
-                cred = credentials.Certificate(cred_path)
-                firebase_admin.initialize_app(cred)
-            else:
-                print("🌐 Usando Application Default Credentials (ADC)")
-                firebase_admin.initialize_app()
+            # Em produção (Cloud Run), usa Application Default Credentials da service account
+            print("🌐 Usando Application Default Credentials (ADC) da service account")
+            firebase_admin.initialize_app()
                 
             _db = firestore.client()
             print("✅ Firebase inicializado com sucesso.")
