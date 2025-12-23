@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SenseiDB - Seu Mentor IA</title>
+
+        <link rel="icon" type="image/png" href="assets/favicon.png">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        
+        <style>
+            /* --- Reset Básico e Variáveis --- */
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+
+            :root {
+                --cor-acao-primaria: #FF8C00;
+                --cor-terciaria: #4ecdc4;
+                --cor-hover: #CC7A00;
+                --cor-fundo: #1a1a2e;
+                --cor-container: #16213e; /* Cor sólida para consistência */
+                --cor-texto-primario: #A0AEC0;
+                --cor-texto-secundario: #E2E8F0;
+                --cor-borda: rgba(78, 205, 196, 0.2);
+                --cor-sucesso: #28a745;
+                --cor-perigo: #eb1d32;
+                --fonte-primaria: 'Orbitron', sans-serif;
+                --fonte-secundaria: 'Montserrat', sans-serif;
+            }
+
+            body[data-theme='light'] {
+                --cor-acao-primaria: #FF8383;
+                --cor-terciaria: #A19AD3;
+                --cor-hover: #f08181;
+                --cor-fundo: #fdeff2;
+                --cor-container: #fff;
+                --cor-texto-primario: #4A5568;
+                --cor-texto-secundario: #2D3748;
+                --cor-borda: #A1D6CB;
+            }
+
+            body {
+                font-family: var(--fonte-secundaria);
+                background-color: var(--cor-fundo);
+                color: var(--cor-texto-secundario);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            /* Estilo para o tema escuro (padrão) */
+            body.logged-in::before {
+                content: '';
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100vh;
+                z-index: -1;
+                background-image: url("assets/circuitoscdk.png");
+                background-color: var(--cor-fundo);
+                background-size: cover;
+                background-position: center;
+                filter: blur(3px);
+                opacity: 0.5;
+            }
+
+            /* Estilo para o tema claro */
+            body.logged-in[data-theme='light']::before {
+                background-image: url("assets/ia.png"); 
+                background-color: var(--cor-fundo);
+                background-size: 150px;
+                background-repeat: repeat;
+                filter: blur(1px);
+                opacity: 0.5;
+            }
+
+            .hidden { display: none !important; }
+
+            /* --- Tela de Login --- */
+            .login-container { width: 100%; max-width: 450px; background: var(--cor-container); border: 1px solid var(--cor-borda); border-radius: 20px; padding: 40px; }
+            .login-header { text-align: center; margin-bottom: 30px; }
+            .login-header h1 { font-family: var(--fonte-primaria); font-size: 32px; color: var(--cor-acao-primaria); }
+            .login-header p { color: var(--cor-texto-primario); }
+            .form-group { margin-bottom: 20px; }
+            .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+            .form-group input, .form-group select {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid var(--cor-borda);
+                border-radius: 8px;
+                background: var(--cor-fundo);
+                color: var(--cor-texto-secundario);
+                -webkit-appearance: none;
+                appearance: none;
+            }
+
+            .form-group select {
+                background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234ecdc4%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+                background-repeat: no-repeat;
+                background-position: right .7em top 50%;
+                background-size: .65em auto;
+            }
+
+            /* --- Tela Principal do App --- */
+            .container { width: 100%; max-width: 1400px; max-height: 90vh; display: flex; background: var(--cor-container); border-radius: 15px; border: 1px solid var(--cor-borda); overflow: hidden; }
+
+            /* --- Sidebar --- */
+            .sidebar { width: 300px; justify-content: space-between; align-items: center; background: var(--cor-fundo); padding: 20px; display: flex; margin-bottom: 5px; flex-direction: column; border-right: 1px solid var(--cor-borda); }
+            .sidebar a, .mobile-sidebar a { text-decoration: none; color: inherit; }
+            .sidebar h1 { font-family: var(--fonte-primaria); font-size: 28px; color: var(--cor-acao-primaria); }
+            .sidebar .subtitle { font-size: 12px; color: var(--cor-texto-primario); margin-bottom: 10px; }
+            #theme-toggle-btn { background: none; border: none; color: var(--cor-terciaria); font-size: 18px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+            #theme-toggle-btn:hover {color: var(--cor-acao-primaria); transform: translateY(-3px); transition: transform 0.3s ease-in-out;}
+            #mobile-theme-toggle-btn { background: none; border: none; color: var(--cor-terciaria); font-size: 18px; width: 40px; height: 40px; cursor: pointer; }
+            #mobile-theme-toggle-btn:hover {background-color: var(--cor-container); color: var(--cor-acao-primaria); transform: translateY(-3px); transition: transform 0.3s ease-in-out;}
+            
+            .user-info { text-align: center; margin: 10px; }
+            .user-info .email { font-size: 14px; color: var(--cor-terciaria); font-weight: 600; word-break: break-all; }
+            .section { text-align: center; margin-top: 10px; margin-bottom: 10px; gap: 5px}
+            .section-title { font-size: large; font-weight: 600; margin-bottom: 10px; color: var(--cor-texto-secundario); }
+            textarea { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); color: var(--cor-texto-secundario); resize: vertical; min-height: 80px; }
+
+            .login-tabs { display: flex; gap: 10px; margin-bottom: 25px; }
+            .tab { flex: 1; padding: 12px; border: 1px solid var(--cor-borda); background: transparent; color: var(--cor-texto-primario); font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.3s; }
+            .tab.active { background: var(--cor-acao-primaria); color: var(--cor-fundo); border-color: var(--cor-acao-primaria); }
+            .alert { padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #fff; }
+            .alert-success { background: var(--cor-sucesso); }
+            .alert-error { background: var(--cor-perigo); }
+
+            /* --- Conteúdo Principal (Chat) --- */
+            .main-content { flex: 1; display: flex; flex-direction: column; }
+            .chat-header { padding: 20px; border-bottom: 1px solid var(--cor-borda); }
+            .chat-header h2 { font-family: var(--fonte-primaria); color: var(--cor-terciaria); text-align: right; }
+            .chat-messages { flex: 1; padding: 20px; overflow-y: auto; }
+            .chat-input-area { padding: 20px; border-top: 1px solid var(--cor-borda); }
+            .chat-input-wrapper { display: flex; gap: 10px; }
+            .chat-input { flex: 1; padding: 12px 18px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); color: var(--cor-texto-secundario); resize: none; }
+            .btn-send { padding: 0 25px; background: var(--cor-acao-primaria); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+            .btn-send:hover { background: var(--cor-hover); }
+            .btn-send:disabled { opacity: 0.5; cursor: not-allowed;}
+            
+            /* --- Componentes Gerais (Botões, etc) --- */
+            .btn { width: 100%; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+            .btn:hover { transform: translateY(-3px); transition: transform 0.3s ease-in-out;}
+            .btn-primary { background: var(--cor-acao-primaria); color: #fff; }
+            .btn-secondary { margin: 2px; background: transparent; color: var(--cor-texto-secundario); border: 2px solid var(--cor-borda); }
+            .btn-danger { background: var(--cor-perigo); color: #fff; }
+
+            .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+            .message { display: flex; gap: 10px; max-width: 80%; }
+            .message.user { align-self: flex-end; flex-direction: row-reverse; }
+            .message-avatar { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+            .message.user .message-avatar { background: var(--cor-acao-primaria); color: var(--cor-fundo); }
+            .message.assistant .message-avatar { background: var(--cor-terciaria); color: var(--cor-fundo); }
+            .message-content { background: var(--cor-container); padding: 12px 18px; border-radius: 15px; color: var(--cor-texto-secundario); line-height: 1.6; }
+            .message.user .message-content { background: var(--cor-acao-primaria); color: var(--cor-fundo); }
+
+            .chat-input-area { padding: 20px; border: 1px solid var(--cor-borda); }
+            .chat-input-wrapper { display: flex; gap: 10px; }
+            .chat-input { flex: 1; padding: 12px 18px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); color: var(--cor-texto-secundario); resize: none; }
+            .chat-input:focus { outline: none; border-color: var(--cor-acao-primaria); }
+            
+            /* --- Estilos do Modal de API --- */
+            .modal {
+                position: fixed;
+                z-index: 100;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-content {
+                background-color: var(--cor-container);
+                margin: auto;
+                padding: 30px;
+                border: 1px solid var(--cor-borda);
+                border-radius: 15px;
+                width: 90%;
+                max-width: 500px;
+            }
+
+            .modal-header {
+                font-family: var(--fonte-primaria);
+                font-size: 20px;
+                margin-bottom: 20px;
+                color: var(--cor-terciaria);
+            }
+
+            .modal-buttons {
+                display: flex;
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+            /* --- Estilos para o Menu Hambúrguer e Sidebar Móvel --- */
+            .hamburger-btn {
+                display: none; /* Escondido por padrão em telas grandes */
+                background: none;
+                border: none;
+                color: var(--cor-terciaria);
+                font-size: 24px;
+                cursor: pointer;
+            }
+
+            .mobile-sidebar {
+                text-align: center;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 300px;
+                height: 100%;
+                background: var(--cor-fundo);
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+                z-index: 2000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+                overflow-y: auto; /* Adicionado para permitir rolagem */
+            }
+
+            .mobile-sidebar h1 { font-family: var(--fonte-primaria); font-size: 24px; color: var(--cor-acao-primaria); }
+            .mobile-sidebar .subtitle { font-size: 12px; color: var(--cor-texto-primario); margin-bottom: 15px; }
+
+            .mobile-sidebar.open {
+                transform: translateX(0);
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 1999;
+            }
+
+            /* --- Media Query para Telas Menores --- */
+            @media (max-width: 900px) {
+                body { padding: 0; }
+                .container {
+                    min-height: 100vh;
+                    width: 100vw;
+                    border-radius: 0;
+                    flex-direction: column; /* Empilha o layout */
+                }
+                
+                .sidebar {
+                    display: none; /* Esconde o sidebar de desktop */
+                }
+
+                .main-content {
+                    width: 100%;
+                }
+
+                .chat-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+
+                .hamburger-btn {
+                    display: block; /* Mostra o botão hambúrguer */
+                }
+
+                /* Regras para o Tutorial em telas pequenas */
+                .tutorial-card {
+                    width: 95%;
+                    padding: 20px;
+                    height: auto;
+                }
+
+                .tutorial-header h2 {
+                    font-size: 24px;
+                }
+
+                .tutorial-step-content h3 {
+                    font-size: 16px;
+                }
+                
+                .tutorial-step-content p {
+                    font-size: 13px;
+                }
+            }
+            
+            .tutorial-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 3000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                backdrop-filter: blur(5px);
+            }
+
+            .tutorial-card {
+                background: var(--cor-container);
+                border: 2px solid var(--cor-acao-primaria);
+                border-radius: 20px;
+                padding: 20px;
+                max-width: 700px;
+                width: 80%;
+                position: relative;
+                animation: slideIn 0.5s ease-out;
+            }
+
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-50px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .tutorial-header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+
+            .tutorial-header h2 {
+                font-family: var(--fonte-primaria);
+                color: var(--cor-acao-primaria);
+                font-size: 32px;
+                margin-bottom: 10px;
+            }
+
+            .tutorial-header p {
+                color: var(--cor-texto-primario);
+                font-size: 16px;
+            }
+
+            .tutorial-steps {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+
+            .tutorial-step {
+                display: flex;
+                gap: 15px;
+                padding: 10px;
+                background: var(--cor-fundo);
+                border-radius: 12px;
+                border-left: 4px solid var(--cor-terciaria);
+                transition: transform 0.3s;
+            }
+
+            .tutorial-step:hover {
+                transform: translateX(5px);
+            }
+
+            .tutorial-step-icon {
+                font-size: 32px;
+                flex-shrink: 0;
+            }
+
+            .tutorial-step-content h3 {
+                color: var(--cor-terciaria);
+                margin-bottom: 8px;
+                font-size: 18px;
+            }
+
+            .tutorial-step-content p {
+                color: var(--cor-texto-primario);
+                line-height: 1.5;
+                font-size: 14px;
+            }
+
+            .tutorial-progress {
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+                margin-bottom: 20px;
+            }
+
+            .progress-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: var(--cor-borda);
+                transition: all 0.3s;
+            }
+
+            .progress-dot.active {
+                background: var(--cor-acao-primaria);
+                width: 30px;
+                border-radius: 5px;
+            }
+
+            .tutorial-buttons {
+                display: flex;
+                gap: 15px;
+                justify-content: space-between;
+            }
+
+            .tutorial-buttons .btn {
+                flex: 1;
+            }
+
+            .tutorial-skip {
+                color: var(--cor-texto-primario);
+                text-align: center;
+                margin-top: 15px;
+                font-size: 14px;
+                cursor: pointer;
+                text-decoration: underline;
+            }
+
+            .tutorial-skip:hover {
+                color: var(--cor-acao-primaria);
+            }
+
+            .highlight-pulse {
+                animation: pulse 2s infinite;
+                box-shadow: 0 0 0 0 var(--cor-acao-primaria);
+            }
+
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.7);
+                }
+                70% {
+                    box-shadow: 0 0 0 20px rgba(255, 140, 0, 0);
+                }
+                100% {
+                    box-shadow: 0 0 0 0 rgba(255, 140, 0, 0);
+                }
+            }
+
+        </style>
+
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+        <script>
+            
+            window.dataLayer = window.dataLayer || [];
+            
+            function gtag(){dataLayer.push(arguments);}
+            
+            gtag('js', new Date());
+
+            gtag('config', 'G-PJG10ZYPBS');
+
+        </script>
+    
+    </head>
+    
+    <body>
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-header">
+                <a href="https://www.cdkteck.com.br" target="_blank">
+                    <h1>🧠 SenseiDB</h1>
+                </a>
+                <p>Seu Mentor Estratégico Pessoal</p>
+            </div>
+
+            <div class="login-tabs">
+                <button class="tab active" onclick="switchTab('login')">Login</button>
+                <button class="tab" onclick="switchTab('register')">Cadastrar</button>
+            </div>
+            
+            <div id="alertContainer"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                    <a href="#" onclick=resetPassword()>Esqueceu a senha?</a>
+                </div>
+                <button type="submit" class="btn btn-primary">Entrar</button>
+            </form>
+
+            <div style="text-align: center;">ou</div>
+            <button class="btn btn-secondary" onclick="loginWithGoogle()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" width="18" height="18">
+                Entrar com Google
+            </button>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="hidden">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" required placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="registerPassword" required placeholder="Mínimo 6 caracteres">
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Senha</label>
+                    <input type="password" id="registerConfirm" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary">Criar Conta</button>
+            </form>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="container hidden">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <a href="https://www.cdkteck.com.br" target="_blank">
+                    <h1>🧠 SenseiDB</h1>
+                </a>
+                <p class="subtitle">v5.0.5 - Mentor IA Adaptativo</p>
+
+                <div class="user-info">
+                    <div class="email" id="userEmail">usuario@email.com</div>
+                    <div class="ai-status">
+                        <span class="status-dot"></span>
+                        <span id="aiStatus">Google AI Ativo</span>
+                        <button id="theme-toggle-btn" title="Alternar tema">🌙</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Adicionar Contexto</div>
+                    <textarea id="newContext" placeholder="Digite um insight sobre você..."></textarea>
+                    <button class="btn btn-primary" onclick=saveContext()>
+                        💾 Salvar Inteligência
+                    </button>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Configurações</div>
+                    <button class="btn btn-secondary" onclick="showApiConfig()">
+                        🔧 Gerenciar API
+                    </button>
+                    <button class="btn btn-secondary" onclick=clearChat()>
+                        🗑️ Limpar Conversa
+                    </button>
+                </div>
+
+                <button class="btn btn-danger" onclick=logout()>
+                    🚪 Sair
+                </button>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                
+                <div class="chat-header">
+                    <button id="hamburger-btn" class="hamburger-btn">☰</button>
+                    <h2>Assistente Sensei</h2>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Messages will be added here -->
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="chat-input-wrapper">
+                        <textarea 
+                            id="chatInput" 
+                            class="chat-input" 
+                            placeholder="Qual sua pergunta ou situação?"
+                            rows="1"
+                        ></textarea>
+                        <button class="btn-send" onclick="sendMessage()" id="sendBtn">
+                            Enviar
+                        </button>
+                    </div>
+                </div>
+            
+            </div>
+        
+        </div>
+
+        <div id="mobileSidebar" class="mobile-sidebar">
+            <a href="https://www.cdkteck.com.br" target="_blank">
+                    <h1>🧠 SenseiDB</h1>
+                </a>
+            <p class="subtitle">v5.0.5 - Mentor IA Adaptativo</p>
+
+            <div class="user-info">
+                <div class="email" id="mobileUserEmail"></div>
+                <div class="ai-status">
+                    <span id="mobileAiStatus">Google AI Ativo</span>
+                    <button id="mobile-theme-toggle-btn" title="Alternar tema">🌙</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Adicionar Contexto</div>
+                <textarea id="mobileNewContext" placeholder="Digite um insight..."></textarea>
+                <button class="btn btn-primary" onclick="saveContext(true)" style="margin-top: 10px;">💾 Salvar</button>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Configurações</div>
+                <button class="btn btn-secondary" onclick="showApiConfig()">🔧 Gerenciar API</button>
+                <button class="btn btn-secondary" onclick="clearChat()" style="margin-top: 10px;">🗑️ Limpar Conversa</button>
+            </div>
+
+            <button class="btn btn-danger" onclick="logout()" style="margin-top: auto;">🚪 Sair</button>
+        </div>
+
+        <div id="overlay" class="overlay"></div>
+
+        <!-- API Config Modal -->
+        <div id="apiModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">Configurar API Key</div>
+                
+                <div class="form-group">
+                    <label for="apiProvider">Provedor de IA</label>
+                    <select id="apiProvider" class="form-control">
+                        <option value="groq">Groq (Rápido)</option>
+                        <option value="google">Google AI (Estável)</option>
+                    </select>
+                </div>
+
+                <div id="groqApiKeyGroup" class="form-group">
+                    <label>Chave Groq API</label>
+                    <input type="password" id="groqApiKey" class="form-control" placeholder="gsk_...">
+                    <small>Obtenha sua chave em <a href="https://console.groq.com/keys" target="_blank">Groq Console</a>.</small>
+                </div>
+
+                <div id="googleApiKeyGroup" class="form-group hidden">
+                    <label>Chave Google AI API</label>
+                    <input type="password" id="googleApiKey" class="form-control" placeholder="AIza...">
+                    <small>Obtenha sua chave no <a href="https://aistudio.google.com/app/api-keys" target="_blank">Google AI Studio</a>.</small>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick="saveApiKey()">Salvar</button>
+                    <button class="btn btn-secondary" onclick="closeApiModal()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tutorialOverlay" class="tutorial-overlay hidden">
+            
+            <div class="tutorial-card">
+            
+                <div class="tutorial-header">
+                    <h2>🎓 Bem-vindo ao SenseiDB!</h2>
+                    <p id="tutorialSubtitle">Vamos te ensinar a usar seu mentor IA</p>
+                </div>
+
+                <!-- Slide 1: Introdução -->
+                <div id="tutorialSlide1" class="tutorial-content">
+                    <div class="tutorial-steps">
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🧠</div>
+                            <div class="tutorial-step-content">
+                                <h3>O que é o SenseiDB?</h3>
+                                <p>Um assistente de IA que aprende com você. Quanto mais você compartilha sobre si, mais personalizadas são as respostas.</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">💾</div>
+                            <div class="tutorial-step-content">
+                                <h3>Sistema RAG Inteligente</h3>
+                                <p>Suas informações são salvas e usadas para gerar respostas específicas ao seu perfil, objetivos e desafios.</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🔒</div>
+                            <div class="tutorial-step-content">
+                                <h3>Privacidade Garantida</h3>
+                                <p>Seus dados ficam protegidos no Firebase. Apenas você tem acesso aos seus contextos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Como Adicionar Contextos -->
+                <div id="tutorialSlide2" class="tutorial-content hidden">
+                    <div class="tutorial-steps">
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">📝</div>
+                            <div class="tutorial-step-content">
+                                <h3>1. Adicione Contextos</h3>
+                                <p>Use a área "Adicionar Contexto" na sidebar para compartilhar informações sobre você: personalidade, objetivos, desafios, preferências.</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">💡</div>
+                            <div class="tutorial-step-content">
+                                <h3>Exemplos de Contextos</h3>
+                                <p><strong>Bons:</strong> "Sou desenvolvedor Python", "Tenho dificuldade com procrastinação", "MBTI: INTP"<br>
+                                <strong>Evite:</strong> Logs temporários como "indo dormir"</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🎯</div>
+                            <div class="tutorial-step-content">
+                                <h3>Quanto Mais, Melhor</h3>
+                                <p>Quanto mais contextos você adiciona, mais o Sensei entende você e gera respostas personalizadas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Como Usar o Chat -->
+                <div id="tutorialSlide3" class="tutorial-content hidden">
+                    <div class="tutorial-steps">
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">💬</div>
+                            <div class="tutorial-step-content">
+                                <h3>2. Converse com o Sensei</h3>
+                                <p>Faça perguntas, peça conselhos, compartilhe situações. O Sensei usará seus contextos para dar respostas adaptadas a você.</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🤖</div>
+                            <div class="tutorial-step-content">
+                                <h3>Duas IAs Disponíveis</h3>
+                                <p><strong>Groq AI:</strong> Ultra-rápido (configure sua chave em Gerenciar API)<br>
+                                <strong>Google AI:</strong> Fallback automático se Groq falhar</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🔄</div>
+                            <div class="tutorial-step-content">
+                                <h3>Atualização Contínua</h3>
+                                <p>Continue adicionando contextos conforme evolui. O Sensei sempre usará as informações mais recentes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navegação -->
+                <div class="tutorial-progress">
+                    <div class="progress-dot active" id="dot1"></div>
+                    <div class="progress-dot" id="dot2"></div>
+                    <div class="progress-dot" id="dot3"></div>
+                </div>
+
+                <div class="tutorial-buttons">
+                    <button class="btn btn-secondary" id="tutorialPrevBtn" onclick="previousSlide()" disabled>
+                        ← Anterior
+                    </button>
+                    <button class="btn btn-primary" id="tutorialNextBtn" onclick="nextSlide()">
+                        Próximo →
+                    </button>
+                </div>
+
+                <div class="tutorial-skip" onclick="skipTutorial()">
+                    Pular tutorial
+                </div>
+            
+            </div>
+
+        </div>
+
+        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+        <script>
+            // Import the functions you need from the SDKs you need
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+            import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+            // TODO: Add SDKs for Firebase products that you want to use
+            // https://firebase.google.com/docs/web/setup#available-libraries
+
+            // Your web app's Firebase configuration
+            // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+            const firebaseConfig = {
+                apiKey: "AIzaSyAAqeBcWQechliUfEFodQSJWTV3RtvOqGo",
+                authDomain: "cdkteck-hub.firebaseapp.com",
+                projectId: "cdkteck-hub",
+                storageBucket: "cdkteck-hub.firebasestorage.app",
+                messagingSenderId: "402043888600",
+                appId: "1:402043888600:web:c29a42be4ab86a22d748ad",
+                measurementId: "G-HTDZ2S5HFC"
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+
+            // Define a URL do backend baseando-se no ambiente (desenvolvimento local vs. produção)
+            const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+            const BACKEND_URL = isLocal 
+                ? 'http://localhost:8000/api' 
+                : 'https://senseidb-agent-402043888600.southamerica-east1.run.app/api';
+
+            // State
+            let currentUser = null;
+            let messages = [];
+            let apiProvider = localStorage.getItem('api_provider') || 'groq';
+            let groqApiKey = localStorage.getItem('groq_api_key') || '';
+            let googleApiKey = localStorage.getItem('google_api_key') || '';
+
+            // --- DOM Elements ---
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const mobileThemeToggleBtn = document.getElementById('mobile-theme-toggle-btn');
+            const apiProviderSelect = document.getElementById('apiProvider');
+
+            // Auto-resize textarea
+            document.getElementById('chatInput').addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            const currentTheme = localStorage.getItem('theme');
+
+            // Função para aplicar o tema
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    document.body.setAttribute('data-theme', 'light');
+                    themeToggleBtn.textContent = '🌙';
+                    mobileThemeToggleBtn.textContent = '🌙';
+                } else {
+                    document.body.removeAttribute('data-theme');
+                    themeToggleBtn.textContent = '☀️';
+                    mobileThemeToggleBtn.textContent = '☀️';
+                }
+            }
+
+            // Aplica o tema salvo ao carregar a página
+            if (currentTheme) {
+                applyTheme(currentTheme);
+            }
+
+            // Lógica do clique no botão de tema
+            function handleThemeToggle() {
+                let theme = 'dark';
+                if (!document.body.getAttribute('data-theme')) {
+                    theme = 'light';
+                }
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
+            }
+
+            themeToggleBtn.addEventListener('click', handleThemeToggle);
+            mobileThemeToggleBtn.addEventListener('click', handleThemeToggle);
+
+            async function resetPassword() {
+                const email = document.getElementById('loginEmail').value;
+                if (!email) {
+                    showAlert('Por favor, digite seu e-mail no campo acima para redefinir a senha.', 'error');
+                    return;
+                }
+
+                try {
+                    await auth.sendPasswordResetEmail(email);
+                    showAlert('E-mail de redefinição de senha enviado! Verifique sua caixa de entrada.', 'success');
+                } catch (error) {
+                    showAlert('Erro ao enviar e-mail: ' + error.message, 'error');
+                }
+            }
+
+            async function loginWithGoogle() {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                try {
+                    await auth.signInWithPopup(provider);
+                } catch (error) {
+                    showAlert('Erro ao fazer login com Google: ' + error.message, 'error');
+                }
+            }
+
+            // Enter to send
+            document.getElementById('chatInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Tab switching
+            function switchTab(tab) {
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                event.target.classList.add('active');
+
+                document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+                document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+                clearAlert();
+            }
+
+            // Alert functions
+            function showAlert(message, type) {
+                const container = document.getElementById('alertContainer');
+                container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            }
+
+            function clearAlert() {
+                document.getElementById('alertContainer').innerHTML = '';
+            }
+
+            // Login
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                try {
+                    await auth.signInWithEmailAndPassword(email, password);
+                } catch (error) {
+                    showAlert('Email ou senha incorretos', 'error');
+                }
+            });
+
+            // Register
+            document.getElementById('registerForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                const confirm = document.getElementById('registerConfirm').value;
+
+                if (password !== confirm) {
+                    showAlert('As senhas não coincidem', 'error');
+                    return;
+                }
+
+                try {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    showAlert('Cadastro realizado! Faça login para continuar.', 'success');
+                    setTimeout(() => switchTab('login'), 2000);
+                } catch (error) {
+                    showAlert('Erro no cadastro: ' + error.message, 'error');
+                }
+            });
+
+            // Init app
+            function initApp() {
+                currentUser = auth.currentUser;
+                document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('mobileUserEmail').textContent = currentUser.email;
+                updateAIStatus();
+            }
+
+            function updateAIStatus(aiUsed) {
+                let statusText = 'Nível Gratuito';
+                if (apiProvider === 'groq' && groqApiKey) {
+                    statusText = '🚀 Groq AI Ativo';
+                } else if (apiProvider === 'google' && googleApiKey) {
+                    statusText = '🌐 Google AI Ativo';
+                }
+                if (aiUsed) {
+                    statusText = aiUsed === 'groq' ? '🚀 Groq AI Ativo' : '🌐 Google AI Ativo';
+                }
+                document.getElementById('aiStatus').textContent = statusText;
+                document.getElementById('mobileAiStatus').textContent = statusText;
+            }
+
+            // Send message
+            async function sendMessage() {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                
+                if (!message) return;
+
+                addMessage(message, 'user');
+                input.value = '';
+                input.style.height = 'auto';
+
+                const sendBtn = document.getElementById('sendBtn');
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Enviando...';
+
+                try {
+                    const requestBody = {
+                        user_id: currentUser.uid,
+                        query: message
+                    };
+
+                    if (apiProvider === 'groq' && groqApiKey) {
+                        requestBody.groq_api_key = groqApiKey;
+                    } else if (apiProvider === 'google' && googleApiKey) {
+                        requestBody.google_api_key = googleApiKey;
+                    }
+
+                    const response = await fetch(`${BACKEND_URL}/chat/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.status === 429 && data.error === 'USAGE_LIMIT_EXCEEDED') {
+                        addMessage('Seu limite de uso gratuito foi atingido. Por favor, adicione sua própria chave de API para continuar.', 'assistant');
+                        showApiConfig();
+                    } else if (data.error === 'INVALID_API_KEY') {
+                        const providerName = data.provider === 'groq' ? 'Groq' : 'Google AI';
+                        addMessage(`Sua chave da ${providerName} parece ser inválida ou excedeu o limite. Por favor, verifique sua chave e tente novamente.`, 'assistant');
+                        showApiConfig();
+                    } else if (data.error) {
+                        addMessage(`Erro: ${data.error}`, 'assistant');
+                    } else {
+                        addMessage(data.resposta, 'assistant', data.ia_usada);
+                        updateAIStatus(data.ia_usada);
+                    }
+                } catch (error) {
+                    addMessage(`Erro de conexão: ${error.message}`, 'assistant');
+                }
+
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Enviar';
+            }
+
+            // Add message to chat
+            function addMessage(content, role, aiUsed) {
+                const messagesDiv = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+
+                const avatar = role === 'user' ? currentUser.email[0].toUpperCase() : '🧠';
+                const aiLabel = aiUsed ? `via ${aiUsed === 'groq' ? 'Groq' : 'Google'}` : '';
+
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">${avatar}</div>
+                    <div>
+                        <div class="message-content">${content.replace(/\n/g, '<br>')}</div>
+                        ${aiLabel ? `<div class="message-meta">${aiLabel}</div>` : ''}
+                    </div>
+                `;
+
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+
+            // Save context
+            async function saveContext(isMobile = false) {
+                const textareaId = isMobile ? 'mobileNewContext' : 'newContext';
+                const textarea = document.getElementById(textareaId);
+                const context = textarea.value.trim();
+
+                if (!context) return;
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/contexto/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentUser.uid,
+                            contexto: context
+                        })
+                    });
+
+                    if (response.ok) {
+                        textarea.value = '';
+                        addMessage('✅ Contexto salvo com sucesso!', 'assistant');
+                    } else {
+                        addMessage('❌ Erro ao salvar contexto', 'assistant');
+                    }
+                } catch (error) {
+                    addMessage(`❌ Erro: ${error.message}`, 'assistant');
+                }
+            }
+
+            // API Config
+            function showApiConfig() {
+                apiProviderSelect.value = apiProvider;
+                document.getElementById('groqApiKey').value = groqApiKey;
+                document.getElementById('googleApiKey').value = googleApiKey;
+                toggleApiInputFields();
+                document.getElementById('apiModal').classList.remove('hidden');
+            }
+
+            function closeApiModal() {
+                document.getElementById('apiModal').classList.add('hidden');
+            }
+
+            function saveApiKey() {
+                apiProvider = apiProviderSelect.value;
+                groqApiKey = document.getElementById('groqApiKey').value.trim();
+                googleApiKey = document.getElementById('googleApiKey').value.trim();
+
+                localStorage.setItem('api_provider', apiProvider);
+                localStorage.setItem('groq_api_key', groqApiKey);
+                localStorage.setItem('google_api_key', googleApiKey);
+
+                updateAIStatus();
+                closeApiModal();
+                addMessage('✅ Configuração de API atualizada!', 'assistant');
+            }
+
+            function toggleApiInputFields() {
+                if (apiProviderSelect.value === 'groq') {
+                    document.getElementById('groqApiKeyGroup').classList.remove('hidden');
+                    document.getElementById('googleApiKeyGroup').classList.add('hidden');
+                } else {
+                    document.getElementById('groqApiKeyGroup').classList.add('hidden');
+                    document.getElementById('googleApiKeyGroup').classList.remove('hidden');
+                }
+            }
+
+            apiProviderSelect.addEventListener('change', toggleApiInputFields);
+
+            // Clear chat
+            function clearChat() {
+                document.getElementById('chatMessages').innerHTML = '';
+                messages = [];
+            }
+
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    currentUser = user;
+                    document.body.classList.add('logged-in');
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                    initApp();
+                } else {
+                    currentUser = null;
+                    document.body.classList.remove('logged-in');
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('mainApp').classList.add('hidden');
+                }
+            });
+
+            // Logout
+            function logout() {
+                auth.signOut();
+            }
+            
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const mobileSidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('overlay');
+
+            function toggleMenu() {
+                mobileSidebar.classList.toggle('open');
+                overlay.style.display = mobileSidebar.classList.contains('open') ? 'block' : 'none';
+            }
+
+            hamburgerBtn.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+
+            let currentSlide = 1;
+            const totalSlides = 3;
+
+            async function checkIfFirstTime() {
+                if (!currentUser) return;
+
+                const tutorialSeen = localStorage.getItem(`tutorial_seen_${currentUser.uid}`);
+                if (tutorialSeen) return;
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/contexto/check/${currentUser.uid}`);
+                    
+                    if (response.status === 404) {
+                        showTutorial();
+                        return;
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.count === 0 || !data.has_contexts) {
+                        showTutorial();
+                    }
+                } catch (error) {
+                    console.log('Mostrando tutorial (fallback)');
+                    showTutorial();
+                }
+            }
+
+            function showTutorial() {
+                document.getElementById('tutorialOverlay').classList.remove('hidden');
+                currentSlide = 1;
+                updateSlide();
+            }
+
+            function nextSlide() {
+                if (currentSlide < totalSlides) {
+                    currentSlide++;
+                    updateSlide();
+                } else {
+                    completeTutorial();
+                }
+            }
+
+            function previousSlide() {
+                if (currentSlide > 1) {
+                    currentSlide--;
+                    updateSlide();
+                }
+            }
+
+            function updateSlide() {
+                for (let i = 1; i <= totalSlides; i++) {
+                    document.getElementById(`tutorialSlide${i}`).classList.add('hidden');
+                    document.getElementById(`dot${i}`).classList.remove('active');
+                }
+
+                document.getElementById(`tutorialSlide${currentSlide}`).classList.remove('hidden');
+                document.getElementById(`dot${currentSlide}`).classList.add('active');
+
+                document.getElementById('tutorialPrevBtn').disabled = currentSlide === 1;
+                document.getElementById('tutorialNextBtn').textContent = 
+                    currentSlide === totalSlides ? 'Começar! 🚀' : 'Próximo →';
+            }
+
+            function skipTutorial() {
+                if (confirm('Tem certeza que deseja pular o tutorial? Você pode ver essas informações novamente limpando o cache do navegador.')) {
+                    completeTutorial();
+                }
+            }
+
+            function completeTutorial() {
+                localStorage.setItem(`tutorial_seen_${currentUser.uid}`, 'true');
+                document.getElementById('tutorialOverlay').classList.add('hidden');
+                
+                const contextArea = document.getElementById('newContext');
+                if (contextArea) {
+                    contextArea.classList.add('highlight-pulse');
+                    setTimeout(() => {
+                        contextArea.classList.remove('highlight-pulse');
+                    }, 3000);
+                }
+                
+                addMessage('👋 Olá! Sou o Sensei, seu mentor de IA adaptativo. Para começar, adicione alguns contextos sobre você na sidebar. Quanto mais eu souber, melhor posso te ajudar!', 'assistant');
+            }
+
+            const originalInitApp = initApp;
+            initApp = function() {
+                originalInitApp();
+                checkIfFirstTime();
+            }
+
+        </script>
+    
+    </body>
+</html>

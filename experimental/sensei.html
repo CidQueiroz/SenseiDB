@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SenseiDB - Seu Mentor IA</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        
+        <style>
+            /* --- Reset Básico e Variáveis --- */
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+
+            :root {
+                --cor-acao-primaria: #FF8C00;
+                --cor-terciaria: #4ecdc4;
+                --cor-hover: #CC7A00;
+                --cor-fundo: #1a1a2e;
+                --cor-container: #16213e; /* Cor sólida para consistência */
+                --cor-texto-primario: #A0AEC0;
+                --cor-texto-secundario: #E2E8F0;
+                --cor-borda: rgba(78, 205, 196, 0.2);
+                --cor-sucesso: #28a745;
+                --cor-perigo: #eb1d32;
+                --fonte-primaria: 'Orbitron', sans-serif;
+                --fonte-secundaria: 'Montserrat', sans-serif;
+            }
+
+            body[data-theme='light'] {
+                --cor-acao-primaria: #FF8383;
+                --cor-terciaria: #A19AD3;
+                --cor-hover: #f08181;
+                --cor-fundo: #fdeff2;
+                --cor-container: #fff;
+                --cor-texto-primario: #4A5568;
+                --cor-texto-secundario: #2D3748;
+                --cor-borda: #A1D6CB;
+            }
+
+            body {
+                font-family: var(--fonte-secundaria);
+                background-color: var(--cor-fundo);
+                color: var(--cor-texto-secundario);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                padding: 20px;
+            }
+
+            /* Estilo para o tema escuro (padrão) */
+            body.logged-in::before {
+                content: '';
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100vh;
+                z-index: -1;
+                background-image: url("Assets/circuitos2.png");
+                background-color: var(--cor-fundo);
+                background-size: cover;
+                background-position: center;
+                filter: blur(3px);
+                opacity: 0.5;
+            }
+
+            /* Estilo para o tema claro */
+            body.logged-in[data-theme='light']::before {
+                background-image: url("Assets/ia.png"); 
+                background-color: var(--cor-fundo);
+                background-size: 150px;
+                background-repeat: repeat;
+                filter: blur(2px);
+                opacity: 0.3;
+            }
+
+            .hidden { display: none !important; }
+
+            /* --- Tela de Login --- */
+            .login-container { width: 100%; max-width: 450px; background: var(--cor-container); border: 1px solid var(--cor-borda); border-radius: 20px; padding: 40px; }
+            .login-header { text-align: center; margin-bottom: 30px; }
+            .login-header h1 { font-family: var(--fonte-primaria); font-size: 32px; color: var(--cor-acao-primaria); }
+            .login-header p { color: var(--cor-texto-primario); }
+            .form-group { margin-bottom: 20px; }
+            .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+            .form-group input { width: 100%; padding: 12px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); color: var(--cor-texto-secundario); }
+
+            /* --- Tela Principal do App --- */
+            .container { width: 100%; max-width: 1400px; height: 90vh; display: flex; background: var(--cor-container); border-radius: 15px; border: 1px solid var(--cor-borda); overflow: hidden; }
+
+            /* --- Sidebar --- */
+            .sidebar { width: 300px; justify-content: space-between; align-items: center; background: var(--cor-fundo); padding: 20px; display: flex; margin-bottom: 5px; flex-direction: column; border-right: 1px solid var(--cor-borda); }
+            .sidebar h1 { font-family: var(--fonte-primaria); font-size: 28px; color: var(--cor-acao-primaria); }
+            .sidebar .subtitle { font-size: 12px; color: var(--cor-texto-primario); margin-bottom: 20px; }
+            #theme-toggle-btn { background: none; border: 1px solid var(--cor-borda); color: var(--cor-terciaria); font-size: 18px; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; }
+            #theme-toggle-btn:hover {background-color: var(--cor-container); color: var(--cor-acao-primaria); border-color: var(--cor-acao-primaria);}
+            .user-info { margin-bottom: 10px; }
+            .user-info .email { font-size: 14px; color: var(--cor-terciaria); font-weight: 600; word-break: break-all; }
+            .section { text-align: center; margin-top: 10px; margin-bottom: 10px; gap: 5px}
+            .section-title { font-size: large; font-weight: 600; margin-bottom: 10px; color: var(--cor-texto-secundario); }
+            textarea { width: 100%; padding: 10px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); color: var(--cor-texto-secundario); resize: vertical; min-height: 80px; }
+
+            .login-tabs { display: flex; gap: 10px; margin-bottom: 25px; }
+            .tab { flex: 1; padding: 12px; border: 1px solid var(--cor-borda); background: transparent; color: var(--cor-texto-primario); font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.3s; }
+            .tab.active { background: var(--cor-acao-primaria); color: var(--cor-fundo); border-color: var(--cor-acao-primaria); }
+            .alert { padding: 12px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; color: #fff; }
+            .alert-success { background: var(--cor-sucesso); }
+            .alert-error { background: var(--cor-perigo); }
+
+            /* --- Conteúdo Principal (Chat) --- */
+            .main-content { flex: 1; display: flex; flex-direction: column; }
+            .chat-header { padding: 20px; border-bottom: 1px solid var(--cor-borda); }
+            .chat-header h2 { font-family: var(--fonte-primaria); color: var(--cor-terciaria); }
+            .chat-messages { flex: 1; padding: 20px; overflow-y: auto; }
+            .chat-input-area { padding: 20px; border-top: 1px solid var(--cor-borda); }
+            .chat-input-wrapper { display: flex; gap: 10px; }
+            .chat-input { flex: 1; padding: 12px 18px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); color: var(--cor-texto-secundario); resize: none; }
+            .btn-send { padding: 0 25px; background: var(--cor-acao-primaria); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+            .btn-send:hover { background: var(--cor-hover); }
+            .btn-send:disabled { opacity: 0.5; cursor: not-allowed;}
+            
+            /* --- Componentes Gerais (Botões, etc) --- */
+            .btn { width: 100%; padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+            .btn-primary { background: var(--cor-acao-primaria); color: #fff; }
+            .btn-secondary { margin: 2px; background: transparent; color: var(--cor-texto-secundario); border: 2px solid var(--cor-borda); }
+            .btn-danger { background: var(--cor-perigo); color: #fff; }
+
+            .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+            .message { display: flex; gap: 10px; max-width: 80%; }
+            .message.user { align-self: flex-end; flex-direction: row-reverse; }
+            .message-avatar { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+            .message.user .message-avatar { background: var(--cor-acao-primaria); color: var(--cor-fundo); }
+            .message.assistant .message-avatar { background: var(--cor-terciaria); color: var(--cor-fundo); }
+            .message-content { background: var(--cor-container); padding: 12px 18px; border-radius: 15px; color: var(--cor-texto-secundario); line-height: 1.6; }
+            .message.user .message-content { background: var(--cor-acao-primaria); color: var(--cor-fundo); }
+
+            .chat-input-area { padding: 20px; border: 1px solid var(--cor-borda); }
+            .chat-input-wrapper { display: flex; gap: 10px; }
+            .chat-input { flex: 1; padding: 12px 18px; border: 1px solid var(--cor-borda); border-radius: 8px; background: var(--cor-fundo); color: var(--cor-texto-secundario); resize: none; }
+            .chat-input:focus { outline: none; border-color: var(--cor-acao-primaria); }
+            
+            /* --- Estilos do Modal de API --- */
+            .modal {
+                position: fixed;
+                z-index: 100;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0,0,0,0.6);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-content {
+                background-color: var(--cor-container);
+                margin: auto;
+                padding: 30px;
+                border: 1px solid var(--cor-borda);
+                border-radius: 15px;
+                width: 90%;
+                max-width: 500px;
+            }
+
+            .modal-header {
+                font-family: var(--fonte-primaria);
+                font-size: 20px;
+                margin-bottom: 20px;
+                color: var(--cor-terciaria);
+            }
+
+            .modal-buttons {
+                display: flex;
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+            /* --- Estilos para o Menu Hambúrguer e Sidebar Móvel --- */
+            .hamburger-btn {
+                display: none; /* Escondido por padrão em telas grandes */
+                background: none;
+                border: none;
+                color: var(--cor-terciaria);
+                font-size: 24px;
+                cursor: pointer;
+            }
+
+            .mobile-sidebar {
+                text-align: center;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 300px;
+                height: 100%;
+                background: var(--cor-fundo);
+                padding: 25px;
+                display: flex;
+                flex-direction: column;
+                z-index: 2000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+
+            .mobile-sidebar h1 { font-family: var(--fonte-primaria); font-size: 24px; color: var(--cor-acao-primaria); }
+            .mobile-sidebar .subtitle { font-size: 12px; color: var(--cor-texto-primario); margin-bottom: 25px; }
+
+            .mobile-sidebar.open {
+                transform: translateX(0);
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 1999;
+            }
+
+            /* --- Media Query para Telas Menores --- */
+            @media (max-width: 768px) {
+                body { padding: 0; }
+                .container {
+                    height: 100vh;
+                    width: 100vw;
+                    border-radius: 0;
+                    flex-direction: column; /* Empilha o layout */
+                }
+                
+                .sidebar {
+                    display: none; /* Esconde o sidebar de desktop */
+                }
+
+                .main-content {
+                    width: 100%;
+                }
+
+                .chat-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                }
+
+                .hamburger-btn {
+                    display: block; /* Mostra o botão hambúrguer */
+                }
+            }
+            .tour-tooltip {
+                position: fixed;
+                z-index: 4000;
+                background: var(--cor-container);
+                border: 2px solid var(--cor-acao-primaria);
+                border-radius: 15px;
+                padding: 20px;
+                max-width: 350px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                animation: fadeInScale 0.3s ease-out;
+            }
+
+            @keyframes fadeInScale {
+                from {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+
+            .tour-tooltip-header {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 15px;
+            }
+
+            .tour-tooltip-icon {
+                font-size: 28px;
+            }
+
+            .tour-tooltip-title {
+                font-family: var(--fonte-primaria);
+                font-size: 18px;
+                color: var(--cor-acao-primaria);
+                font-weight: 600;
+            }
+
+            .tour-tooltip-content {
+                color: var(--cor-texto-primario);
+                line-height: 1.6;
+                margin-bottom: 15px;
+                font-size: 14px;
+            }
+
+            .tour-tooltip-footer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .tour-progress-text {
+                font-size: 12px;
+                color: var(--cor-texto-primario);
+            }
+
+            .tour-buttons {
+                display: flex;
+                gap: 10px;
+            }
+
+            .tour-btn {
+                padding: 8px 16px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 14px;
+                transition: all 0.3s;
+            }
+
+            .tour-btn-skip {
+                background: transparent;
+                color: var(--cor-texto-primario);
+                border: 1px solid var(--cor-borda);
+            }
+
+            .tour-btn-next {
+                background: var(--cor-acao-primaria);
+                color: white;
+            }
+
+            .tour-btn-prev {
+                background: transparent;
+                color: var(--cor-texto-secundario);
+                border: 1px solid var(--cor-borda);
+            }
+
+            /* Seta do tooltip */
+            .tour-tooltip::after {
+                content: '';
+                position: absolute;
+                width: 0;
+                height: 0;
+                border-style: solid;
+            }
+
+            .tour-tooltip.arrow-top::after {
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border-width: 0 12px 12px 12px;
+                border-color: transparent transparent var(--cor-acao-primaria) transparent;
+            }
+
+            .tour-tooltip.arrow-bottom::after {
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border-width: 12px 12px 0 12px;
+                border-color: var(--cor-acao-primaria) transparent transparent transparent;
+            }
+
+            .tour-tooltip.arrow-left::after {
+                right: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                border-width: 12px 12px 12px 0;
+                border-color: transparent var(--cor-acao-primaria) transparent transparent;
+            }
+
+            .tour-tooltip.arrow-right::after {
+                left: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                border-width: 12px 0 12px 12px;
+                border-color: transparent transparent transparent var(--cor-acao-primaria);
+            }
+
+            /* Highlight do elemento em foco */
+            .tour-highlight {
+                position: relative;
+                z-index: 3500 !important;
+                box-shadow: 0 0 0 4px var(--cor-acao-primaria), 0 0 0 9999px rgba(0,0,0,0.7) !important;
+                border-radius: 8px;
+                animation: pulse-highlight 2s infinite;
+            }
+
+            @keyframes pulse-highlight {
+                0%, 100% {
+                    box-shadow: 0 0 0 4px var(--cor-acao-primaria), 0 0 0 9999px rgba(0,0,0,0.7);
+                }
+                50% {
+                    box-shadow: 0 0 0 8px var(--cor-acao-primaria), 0 0 0 9999px rgba(0,0,0,0.7);
+                }
+            }
+
+            /* Overlay escuro */
+            .tour-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.7);
+                z-index: 3000;
+                pointer-events: none;
+            }
+            
+        </style>
+
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
+        <script>
+            
+            window.dataLayer = window.dataLayer || [];
+            
+            function gtag(){dataLayer.push(arguments);}
+            
+            gtag('js', new Date());
+
+            gtag('config', 'G-PJG10ZYPBS');
+
+        </script>
+    
+    </head>
+    
+    <body>
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-header">
+                <a href="https://www.cdkteck.com.br" target="_blank">
+                    <h1>🧠 SenseiDB</h1>
+                </a>
+                <p>Seu Mentor Estratégico Pessoal</p>
+            </div>
+
+            <div class="login-tabs">
+                <button class="tab active" onclick="switchTab('login')">Login</button>
+                <button class="tab" onclick="switchTab('register')">Cadastrar</button>
+            </div>
+            
+            <div id="alertContainer"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                    <a href="#" onclick=resetPassword()>Esqueceu a senha?</a>
+                </div>
+                <button type="submit" class="btn btn-primary">Entrar</button>
+            </form>
+
+            <div style="text-align: center;">ou</div>
+            <button class="btn btn-secondary" onclick="loginWithGoogle()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" width="18" height="18">
+                Entrar com Google
+            </button>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="hidden">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="registerEmail" required placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="registerPassword" required placeholder="Mínimo 6 caracteres">
+                </div>
+                <div class="form-group">
+                    <label>Confirmar Senha</label>
+                    <input type="password" id="registerConfirm" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary">Criar Conta</button>
+            </form>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="container hidden">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <a href="https://www.cdkteck.com.br" target="_blank">
+                    <h1>🧠 SenseiDB</h1>
+                </a>
+                <p class="subtitle">v3.0 - Mentor IA Adaptativo</p>
+
+                <div class="user-info">
+                    <div class="email" id="userEmail">usuario@email.com</div>
+                    <div class="ai-status">
+                        <span class="status-dot"></span>
+                        <span id="aiStatus">Google AI Ativo</span>
+                        <button id="theme-toggle-btn" title="Alternar tema">🌙</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Adicionar Contexto</div>
+                    <textarea id="newContext" placeholder="Digite um insight sobre você..."></textarea>
+                    <button class="btn btn-primary" onclick=saveContext()>
+                        💾 Salvar Inteligência
+                    </button>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Configurações</div>
+                    <button class="btn btn-secondary" onclick="showApiConfig()">
+                        🔧 Gerenciar API
+                    </button>
+                    <button class="btn btn-secondary" onclick=clearChat()>
+                        🗑️ Limpar Conversa
+                    </button>
+                </div>
+
+                <button class="btn btn-danger" onclick=logout()>
+                    🚪 Sair
+                </button>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="chat-header">
+                    <button id="hamburger-btn" class="hamburger-btn">☰</button>
+                    <h2 style="text-align: right;">Assistente Sensei</h2>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Messages will be added here -->
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="chat-input-wrapper">
+                        <textarea 
+                            id="chatInput" 
+                            class="chat-input" 
+                            placeholder="Qual sua pergunta ou situação?"
+                            rows="1"
+                        ></textarea>
+                        <button class="btn-send" onclick="sendMessage()" id="sendBtn">
+                            Enviar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="mobileSidebar" class="mobile-sidebar">
+            <a href="https://www.cdkteck.com.br" target="_blank">
+                    <h1>🧠 SenseiDB</h1>
+                </a>
+            <p class="subtitle">v3.0 - Mentor IA Adaptativo</p>
+
+            <div class="user-info">
+                <div class="email" id="mobileUserEmail"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Adicionar Contexto</div>
+                <textarea id="mobileNewContext" placeholder="Digite um insight..."></textarea>
+                <button class="btn btn-primary" onclick="saveContext(true)" style="margin-top: 10px;">💾 Salvar</button>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Configurações</div>
+                <button class="btn btn-secondary" onclick="showApiConfig()">🔧 Gerenciar API</button>
+                <button class="btn btn-secondary" onclick="clearChat()" style="margin-top: 10px;">🗑️ Limpar Conversa</button>
+            </div>
+
+            <button class="btn btn-danger" onclick="logout()" style="margin-top: auto;">🚪 Sair</button>
+        </div>
+
+        <div id="overlay" class="overlay"></div>
+
+        <!-- API Config Modal -->
+        <div id="apiModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">Configurar API Key</div>
+                <div class="form-group">
+                    <label>Chave Groq API (opcional)</label>
+                    <input type="password" id="groqApiKey" placeholder="gsk_...">
+                    <small>
+                        Deixe vazio para usar Google AI
+                    </small>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-primary" onclick=saveApiKey()>Salvar</button>
+                    <button class="btn btn-secondary" onclick=closeApiModal()>Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tutorialOverlay" class="tutorial-overlay hidden">
+            
+            <div class="tutorial-card">
+            
+                <div class="tutorial-header">
+                    <h2>🎓 Bem-vindo ao SenseiDB!</h2>
+                    <p id="tutorialSubtitle">Vamos te ensinar a usar seu mentor IA</p>
+                </div>
+
+                <!-- Slide 1: Introdução -->
+                <div id="tutorialSlide1" class="tutorial-content">
+                    <div class="tutorial-steps">
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🧠</div>
+                            <div class="tutorial-step-content">
+                                <h3>O que é o SenseiDB?</h3>
+                                <p>Um assistente de IA que aprende com você. Quanto mais você compartilha sobre si, mais personalizadas são as respostas.</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">💾</div>
+                            <div class="tutorial-step-content">
+                                <h3>Sistema RAG Inteligente</h3>
+                                <p>Suas informações são salvas e usadas para gerar respostas específicas ao seu perfil, objetivos e desafios.</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🔒</div>
+                            <div class="tutorial-step-content">
+                                <h3>Privacidade Garantida</h3>
+                                <p>Seus dados ficam protegidos no Firebase. Apenas você tem acesso aos seus contextos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2: Como Adicionar Contextos -->
+                <div id="tutorialSlide2" class="tutorial-content hidden">
+                    <div class="tutorial-steps">
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">📝</div>
+                            <div class="tutorial-step-content">
+                                <h3>1. Adicione Contextos</h3>
+                                <p>Use a área "Adicionar Contexto" na sidebar para compartilhar informações sobre você: personalidade, objetivos, desafios, preferências.</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">💡</div>
+                            <div class="tutorial-step-content">
+                                <h3>Exemplos de Contextos</h3>
+                                <p><strong>Bons:</strong> "Sou desenvolvedor Python", "Tenho dificuldade com procrastinação", "MBTI: INTP"<br>
+                                <strong>Evite:</strong> Logs temporários como "indo dormir"</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🎯</div>
+                            <div class="tutorial-step-content">
+                                <h3>Quanto Mais, Melhor</h3>
+                                <p>Quanto mais contextos você adiciona, mais o Sensei entende você e gera respostas personalizadas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Como Usar o Chat -->
+                <div id="tutorialSlide3" class="tutorial-content hidden">
+                    <div class="tutorial-steps">
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">💬</div>
+                            <div class="tutorial-step-content">
+                                <h3>2. Converse com o Sensei</h3>
+                                <p>Faça perguntas, peça conselhos, compartilhe situações. O Sensei usará seus contextos para dar respostas adaptadas a você.</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🤖</div>
+                            <div class="tutorial-step-content">
+                                <h3>Duas IAs Disponíveis</h3>
+                                <p><strong>Groq AI:</strong> Ultra-rápido (configure sua chave em Gerenciar API)<br>
+                                <strong>Google AI:</strong> Fallback automático se Groq falhar</p>
+                            </div>
+                        </div>
+                        <div class="tutorial-step">
+                            <div class="tutorial-step-icon">🔄</div>
+                            <div class="tutorial-step-content">
+                                <h3>Atualização Contínua</h3>
+                                <p>Continue adicionando contextos conforme evolui. O Sensei sempre usará as informações mais recentes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navegação -->
+                <div class="tutorial-progress">
+                    <div class="progress-dot active" id="dot1"></div>
+                    <div class="progress-dot" id="dot2"></div>
+                    <div class="progress-dot" id="dot3"></div>
+                </div>
+
+                <div class="tutorial-buttons">
+                    <button class="btn btn-secondary" id="tutorialPrevBtn" onclick="previousSlide()" disabled>
+                        ← Anterior
+                    </button>
+                    <button class="btn btn-primary" id="tutorialNextBtn" onclick="nextSlide()">
+                        Próximo →
+                    </button>
+                </div>
+
+                <div class="tutorial-skip" onclick="skipTutorial()">
+                    Pular tutorial
+                </div>
+            
+            </div>
+
+        </div>
+
+        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    
+        <script>
+            // Firebase Config
+            const firebaseConfig = {
+                apiKey: "AIzaSyDlL3WdqovyACEMI1M1-q82ei43PtQqlIw",
+                authDomain: "senseidb-rebranding.firebaseapp.com",
+                projectId: "senseidb-rebranding",
+                storageBucket: "senseidb-rebranding.firebasestorage.app",
+                messagingSenderId: "1022880460923",
+                appId: "1:1022880460923:web:6605c05d9c5b0528fbb2de"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+
+            // Backend URL
+            const BACKEND_URL = 'https://senseidb-agent-1022880460923.southamerica-east1.run.app/api';
+
+            // State
+            let currentUser = null;
+            let messages = [];
+            let groqApiKey = localStorage.getItem('groq_api_key') || '';
+
+            // Auto-resize textarea
+            document.getElementById('chatInput').addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const currentTheme = localStorage.getItem('theme');
+
+            // Função para aplicar o tema
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    document.body.setAttribute('data-theme', 'light');
+                    themeToggleBtn.textContent = '🌙'; // Sol
+                } else {
+                    document.body.removeAttribute('data-theme');
+                    themeToggleBtn.textContent = '☀️'; // Lua
+                }
+            }
+
+            // Aplica o tema salvo ao carregar a página
+            if (currentTheme) {
+                applyTheme(currentTheme);
+            }
+
+            // Lógica do clique no botão
+            themeToggleBtn.addEventListener('click', () => {
+                let theme = 'dark';
+                if (!document.body.getAttribute('data-theme')) {
+                    theme = 'light';
+                }
+                localStorage.setItem('theme', theme);
+                applyTheme(theme);
+            });
+
+            async function resetPassword() {
+                const email = document.getElementById('loginEmail').value;
+                if (!email) {
+                    showAlert('Por favor, digite seu e-mail no campo acima para redefinir a senha.', 'error');
+                    return;
+                }
+
+                try {
+                    await auth.sendPasswordResetEmail(email);
+                    showAlert('E-mail de redefinição de senha enviado! Verifique sua caixa de entrada.', 'success');
+                } catch (error) {
+                    showAlert('Erro ao enviar e-mail: ' + error.message, 'error');
+                }
+            }
+
+            async function loginWithGoogle() {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                try {
+                    await auth.signInWithPopup(provider);
+                    // O código abaixo será executado após o login bem-sucedido
+                    showAlert('Login com Google realizado com sucesso!', 'success');
+                    setTimeout(() => {
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('mainApp').classList.remove('hidden');
+                        initApp();
+                    }, 1000);
+                } catch (error) {
+                    showAlert('Erro ao fazer login com Google: ' + error.message, 'error');
+                }
+            }
+
+            // Enter to send
+            document.getElementById('chatInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Tab switching
+            function switchTab(tab) {
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                event.target.classList.add('active');
+
+                document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+                document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+                clearAlert();
+            }
+
+            // Alert functions
+            function showAlert(message, type) {
+                const container = document.getElementById('alertContainer');
+                container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            }
+
+            function clearAlert() {
+                document.getElementById('alertContainer').innerHTML = '';
+            }
+
+            // Login
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                try {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    showAlert('Login realizado com sucesso!', 'success');
+                    setTimeout(() => {
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        document.getElementById('mainApp').classList.remove('hidden');
+                        initApp();
+                    }, 1000);
+                } catch (error) {
+                    showAlert('Email ou senha incorretos', 'error');
+                }
+            });
+
+            // Register
+            document.getElementById('registerForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                const confirm = document.getElementById('registerConfirm').value;
+
+                if (password !== confirm) {
+                    showAlert('As senhas não coincidem', 'error');
+                    return;
+                }
+
+                try {
+                    await auth.createUserWithEmailAndPassword(email, password);
+                    showAlert('Cadastro realizado! Faça login para continuar.', 'success');
+                    setTimeout(() => switchTab('login'), 2000);
+                } catch (error) {
+                    showAlert('Erro no cadastro: ' + error.message, 'error');
+                }
+            });
+
+            // Init app
+            function initApp() {
+                currentUser = auth.currentUser;
+                document.getElementById('userEmail').textContent = currentUser.email;
+                updateAIStatus();
+            }
+
+            function updateAIStatus() {
+                const status = groqApiKey ? 'Groq AI Ativo' : 'Google AI Ativo';
+                document.getElementById('aiStatus').textContent = status;
+            }
+
+            // Send message
+            async function sendMessage() {
+                const input = document.getElementById('chatInput');
+                const message = input.value.trim();
+                
+                if (!message) return;
+
+                // Add user message
+                addMessage(message, 'user');
+                input.value = '';
+                input.style.height = 'auto';
+
+                // Disable send button
+                const sendBtn = document.getElementById('sendBtn');
+                sendBtn.disabled = true;
+                sendBtn.textContent = 'Enviando...';
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/chat/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentUser.uid,
+                            query: message,
+                            groq_api_key: groqApiKey || undefined
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.erro) {
+                        addMessage(`Erro: ${data.erro}`, 'assistant');
+                    } else {
+                        addMessage(data.resposta, 'assistant', data.ia_usada);
+                    }
+                } catch (error) {
+                    addMessage(`Erro de conexão: ${error.message}`, 'assistant');
+                }
+
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Enviar';
+            }
+
+            // Add message to chat
+            function addMessage(content, role, aiUsed) {
+                const messagesDiv = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+
+                const avatar = role === 'user' ? currentUser.email[0].toUpperCase() : '🧠';
+                const aiLabel = aiUsed ? `via ${aiUsed === 'groq' ? 'Groq' : 'Google'}` : '';
+
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">${avatar}</div>
+                    <div>
+                        <div class="message-content">${content.replace(/\n/g, '<br>')}</div>
+                        ${aiLabel ? `<div class="message-meta">${aiLabel}</div>` : ''}
+                    </div>
+                `;
+
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+
+            // Save context
+            async function saveContext(isMobile = false) {
+                const textareaId = isMobile ? 'mobileNewContext' : 'newContext';
+                const textarea = document.getElementById(textareaId);
+                const context = textarea.value.trim();
+
+                if (!context) return;
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/contexto/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentUser.uid,
+                            contexto: context
+                        })
+                    });
+
+                    if (response.ok) {
+                        textarea.value = '';
+                        addMessage('✅ Contexto salvo com sucesso!', 'assistant');
+                    } else {
+                        addMessage('❌ Erro ao salvar contexto', 'assistant');
+                    }
+                } catch (error) {
+                    addMessage(`❌ Erro: ${error.message}`, 'assistant');
+                }
+            }
+
+            // API Config
+            function showApiConfig() {
+                document.getElementById('groqApiKey').value = groqApiKey;
+                document.getElementById('apiModal').classList.remove('hidden');
+            }
+
+            function closeApiModal() {
+                document.getElementById('apiModal').classList.add('hidden');
+            }
+
+            function saveApiKey() {
+                groqApiKey = document.getElementById('groqApiKey').value.trim();
+                localStorage.setItem('groq_api_key', groqApiKey);
+                updateAIStatus();
+                closeApiModal();
+                addMessage('✅ Configuração atualizada!', 'assistant');
+            }
+
+            // Clear chat
+            function clearChat() {
+                document.getElementById('chatMessages').innerHTML = '';
+                messages = [];
+            }
+
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // Usuário está logado
+                    currentUser = user;
+                    document.body.classList.add('logged-in'); // <-- ADICIONA A CLASSE
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                    initApp(); // Sua função que preenche os dados do usuário
+                } else {
+                    // Usuário está deslogado
+                    currentUser = null;
+                    document.body.classList.remove('logged-in'); // <-- REMOVE A CLASSE
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    document.getElementById('mainApp').classList.add('hidden');
+                }
+            });
+
+            // Logout
+            function logout() {
+                auth.signOut();
+                document.getElementById('mainApp').classList.add('hidden');
+                document.getElementById('loginScreen').classList.remove('hidden');
+                document.body.classList.remove('logged-in'); 
+                clearChat();
+            }
+            
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const mobileSidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('overlay');
+
+            // Função para abrir/fechar o menu
+            function toggleMenu() {
+                mobileSidebar.classList.toggle('open');
+                overlay.style.display = mobileSidebar.classList.contains('open') ? 'block' : 'none';
+            }
+
+            hamburgerBtn.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+
+            let tourActive = false;
+            let currentTourStep = 0;
+
+            const tourSteps = [
+                {
+                    element: '#newContext',
+                    title: 'Área de Contextos',
+                    content: 'Aqui você adiciona informações sobre você: personalidade, objetivos, desafios. Quanto mais contextos, melhor o Sensei te conhece!',
+                    icon: '📝',
+                    position: 'right'
+                },
+                {
+                    element: '#newContext',
+                    title: 'Exemplo de Contexto',
+                    content: '<strong>Bom:</strong> "Sou desenvolvedor Python e tenho TDAH"<br><strong>Evite:</strong> "indo dormir"<br><br>Contextos devem ser informações duradouras sobre você.',
+                    icon: '💡',
+                    position: 'right',
+                    action: () => {
+                        document.getElementById('newContext').placeholder = 'Ex: Sou desenvolvedor Python com TDAH';
+                    }
+                },
+                {
+                    element: '.btn-primary',
+                    title: 'Salvar Inteligência',
+                    content: 'Depois de escrever um contexto, clique aqui para salvá-lo. Ele será usado pelo Sensei nas próximas conversas.',
+                    icon: '💾',
+                    position: 'right'
+                },
+                {
+                    element: '#chatInput',
+                    title: 'Área de Chat',
+                    content: 'Aqui você conversa com o Sensei. Faça perguntas, peça conselhos, compartilhe situações. As respostas serão personalizadas com base nos seus contextos.',
+                    icon: '💬',
+                    position: 'top'
+                },
+                {
+                    element: '#sendBtn',
+                    title: 'Enviar Mensagem',
+                    content: 'Clique aqui ou pressione Enter para enviar sua mensagem. O Sensei analisará seus contextos e gerará uma resposta adaptada a você.',
+                    icon: '🚀',
+                    position: 'top'
+                },
+                {
+                    element: '.btn-secondary',
+                    title: 'Gerenciar API',
+                    content: 'Opcional: Configure sua chave Groq para respostas ultra-rápidas. Se não tiver, o sistema usa Google AI automaticamente.',
+                    icon: '🔧',
+                    position: 'right'
+                }
+            ];
+
+            async function checkIfFirstTime() {
+                if (!currentUser) return;
+
+                const tutorialSeen = localStorage.getItem(`tutorial_seen_${currentUser.uid}`);
+                
+                // Se já viu tutorial, não mostra nada
+                if (tutorialSeen) return;
+
+                // Mostra o tour guiado
+                setTimeout(() => {
+                    startTour();
+                }, 500);
+            }
+
+            function startTour() {
+                tourActive = true;
+                currentTourStep = 0;
+                
+                // Cria overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'tourOverlay';
+                overlay.className = 'tour-overlay';
+                document.body.appendChild(overlay);
+                
+                showTourStep();
+            }
+
+            function showTourStep() {
+                // Remove tooltip anterior
+                const oldTooltip = document.getElementById('tourTooltip');
+                if (oldTooltip) oldTooltip.remove();
+                
+                // Remove highlight anterior
+                const oldHighlight = document.querySelector('.tour-highlight');
+                if (oldHighlight) oldHighlight.classList.remove('tour-highlight');
+                
+                if (currentTourStep >= tourSteps.length) {
+                    endTour();
+                    return;
+                }
+                
+                const step = tourSteps[currentTourStep];
+                const element = document.querySelector(step.element);
+                
+                if (!element) {
+                    console.warn(`Elemento ${step.element} não encontrado`);
+                    nextTourStep();
+                    return;
+                }
+                
+                // Executa ação customizada se existir
+                if (step.action) step.action();
+                
+                // Adiciona highlight
+                element.classList.add('tour-highlight');
+                
+                // Cria tooltip
+                const tooltip = document.createElement('div');
+                tooltip.id = 'tourTooltip';
+                tooltip.className = `tour-tooltip arrow-${step.position}`;
+                
+                tooltip.innerHTML = `
+                    <div class="tour-tooltip-header">
+                        <div class="tour-tooltip-icon">${step.icon}</div>
+                        <div class="tour-tooltip-title">${step.title}</div>
+                    </div>
+                    <div class="tour-tooltip-content">${step.content}</div>
+                    <div class="tour-tooltip-footer">
+                        <div class="tour-progress-text">${currentTourStep + 1} de ${tourSteps.length}</div>
+                        <div class="tour-buttons">
+                            ${currentTourStep > 0 ? '<button class="tour-btn tour-btn-prev" onclick="prevTourStep()">Anterior</button>' : ''}
+                            <button class="tour-btn tour-btn-skip" onclick="skipTour()">Pular</button>
+                            <button class="tour-btn tour-btn-next" onclick="nextTourStep()">
+                                ${currentTourStep === tourSteps.length - 1 ? 'Concluir' : 'Próximo'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(tooltip);
+                
+                // Posiciona tooltip
+                positionTooltip(tooltip, element, step.position);
+            }
+
+            function positionTooltip(tooltip, element, position) {
+                const rect = element.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                
+                let top, left;
+                
+                switch(position) {
+                    case 'top':
+                        top = rect.top - tooltipRect.height - 20;
+                        left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                        break;
+                    case 'bottom':
+                        top = rect.bottom + 20;
+                        left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                        break;
+                    case 'left':
+                        top = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+                        left = rect.left - tooltipRect.width - 20;
+                        break;
+                    case 'right':
+                        top = rect.top + (rect.height / 2) - (tooltipRect.height / 2);
+                        left = rect.right + 20;
+                        break;
+                }
+                
+                // Ajusta se sair da tela
+                if (left < 10) left = 10;
+                if (left + tooltipRect.width > window.innerWidth - 10) {
+                    left = window.innerWidth - tooltipRect.width - 10;
+                }
+                if (top < 10) top = 10;
+                if (top + tooltipRect.height > window.innerHeight - 10) {
+                    top = window.innerHeight - tooltipRect.height - 10;
+                }
+                
+                tooltip.style.top = `${top}px`;
+                tooltip.style.left = `${left}px`;
+            }
+
+            function nextTourStep() {
+                currentTourStep++;
+                showTourStep();
+            }
+
+            function prevTourStep() {
+                if (currentTourStep > 0) {
+                    currentTourStep--;
+                    showTourStep();
+                }
+            }
+
+            function skipTour() {
+                if (confirm('Deseja pular o tutorial? Você pode revê-lo limpando o cache do navegador.')) {
+                    endTour();
+                }
+            }
+
+            function endTour() {
+                tourActive = false;
+                
+                // Remove elementos do tour
+                const tooltip = document.getElementById('tourTooltip');
+                const overlay = document.getElementById('tourOverlay');
+                const highlight = document.querySelector('.tour-highlight');
+                
+                if (tooltip) tooltip.remove();
+                if (overlay) overlay.remove();
+                if (highlight) highlight.classList.remove('tour-highlight');
+                
+                // Marca como visto
+                localStorage.setItem(`tutorial_seen_${currentUser.uid}`, 'true');
+                
+                // Mensagem de boas-vindas
+                addMessage('👋 Pronto! Agora você sabe usar o SenseiDB. Comece adicionando alguns contextos sobre você e depois converse comigo!', 'assistant');
+                
+                // Reset placeholder
+                document.getElementById('newContext').placeholder = 'Digite um insight sobre você...';
+            }
+
+            // Atualiza a função initApp original
+            const originalInitApp = initApp;
+            initApp = function() {
+                originalInitApp();
+                checkIfFirstTime();
+            }
+
+        </script>
+    
+    </body>
+</html>
