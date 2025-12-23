@@ -41,3 +41,18 @@ gemini.md
 teste.py
 .firebase/hosting.*.cache
 frontend/public/assets/ia.png:Zone.Identifier
+# Python artifacts
+# Node.js / Frontend artifacts
+# Environment and Sensitive Files
+# Temporary files, scratchpads, backups
+*.bak
+*~
+README_backup.md
+TEMP.txt
+REMOCOES_PENDENTES.txt
+test_groq.py
+claude.md
+senseidb.md
+# OS/IDE Specific files
+Thumbs.db
+# Firebase Cache
