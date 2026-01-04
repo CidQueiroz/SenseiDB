@@ -1,3 +1,10 @@
+## [5.0.6](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.5...v5.0.6) (2025-12-17)
+
+
+### Bug Fixes
+
+* **deploy:** correção de deploy e credenciais ([97c464c](https://github.com/CidQueiroz/SenseiDB/commit/97c464c620f96fb38fdd05b7e8074cf4e49c8a61))
+
 ## [5.0.5](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.4...v5.0.5) (2025-12-14)
 
 
