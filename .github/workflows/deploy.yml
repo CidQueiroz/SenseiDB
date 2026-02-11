@@ -7,7 +7,7 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  SERVICE_NAME: senseidb-agent
+  SERVICE_NAME: senseidb
   REGION: southamerica-east1
 
 jobs:
