@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@cidqueiroz/cdkteck-ui": "^2.0.5",
+    "@cidqueiroz/cdkteck-ui": "file:../../cdkteck-ui",
     "axios": "^1.13.2",
     "firebase": "^12.7.0",
     "react": "^18.2.0",

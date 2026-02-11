@@ -10,7 +10,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia aplicação
-COPY backend/ .
+# Since the Dockerfile is now inside 'backend/', COPY . . will copy all contents of 'backend/'
+COPY . .
 
 # Coleta estáticos
 RUN python manage.py collectstatic --noinput || true

@@ -9,9 +9,7 @@ export default defineConfig(({ command }) => {
   return {
     plugins: [react()],
     resolve: {
-      alias: isDevelopment ? {
-        '@cidqueiroz/cdkteck-ui': path.resolve(__dirname, '../../cdkteck-ui/src')
-      } : {}
+     
     },
     server: {
       fs: {

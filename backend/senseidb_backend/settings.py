@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '0so3xj%(coh%y0ficnu%rx0_5du$&re2ql=s=zpg9#0ia+ntje')
 
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt', # Added for JWT authentication
     'corsheaders',
     'agent',
 ]
@@ -63,9 +64,10 @@ CORS_ALLOWED_ORIGINS = [
     # Ambiente de Desenvolvimento
     "http://127.0.0.1:5500",
     "http://localhost:5500",
+    "http://localhost:3000", # Adicionado para permitir o frontend React em desenvolvimento
     # Domínios de Produção
-    "https://senseidb-rebranding.web.app",
-    "https://senseidb-rebranding.firebaseapp.com",
+    "https://cdkteck-hub.web.app",
+    "https://cdkteck-hub.firebaseapp.com",
     "https://sensei.cdkteck.com.br",
 ]
 
@@ -99,3 +101,35 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# REST Framework (JWT Authentication)
+REST_FRAMEWORK.update({
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'agent.authentication.FirebaseAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+})
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id', # This should match Django's User model ID field
+    'USER_ID_CLAIM': 'user_id', # This is the claim name in the JWT payload
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}

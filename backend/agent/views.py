@@ -1,13 +1,75 @@
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
-from .utils import processar_query_usuario, salvar_contexto_usuario, init_firebase, InvalidGroqApiKey, InvalidGoogleApiKey
+from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import User # Import Django's User model
 import traceback
 
-# Simulação de rastreamento de uso em memória (para desenvolvimento)
-# Em produção, isso deve ser substituído por uma contagem no Firestore.
-usage_tracking = {}
-FREE_TIER_LIMIT = 20
+from .utils import (
+    processar_query_usuario,
+    salvar_contexto_usuario,
+    init_firebase,
+    InvalidGroqApiKey,
+    InvalidGoogleApiKey,
+    QuotaExceededError,
+)
+from .models import UserProfile, Context
+from .serializers import UserProfileSerializer, ContextSerializer
+
+
+class UserApiKeysView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+        serializer = UserProfileSerializer(user_profile)
+        return Response(serializer.data)
+
+    def post(self, request):
+        user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+        
+        groq_api_key = request.data.get('groq_api_key')
+        google_api_key = request.data.get('google_api_key')
+
+        if groq_api_key is not None:
+            user_profile.groq_api_key = groq_api_key
+        if google_api_key is not None:
+            user_profile.google_api_key = google_api_key
+        
+        user_profile.save()
+        serializer = UserProfileSerializer(user_profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ContextListView(generics.ListCreateAPIView):
+    serializer_class = ContextSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+        return Context.objects.filter(user_profile=user_profile).order_by('-timestamp')
+
+    def perform_create(self, serializer):
+        user_profile, created = UserProfile.objects.get_or_create(user=self.request.user)
+        contexto_texto = serializer.validated_data.get('text')
+
+        # Use the utility function to save to Firestore and get embedding
+        # We need the user's Google API key for embedding generation
+        google_api_key_for_embedding = user_profile.google_api_key or os.environ.get("GOOGLE_API_KEY")
+
+        if not google_api_key_for_embedding:
+            raise status.HTTP_400_BAD_REQUEST("Google API Key not available for embedding.")
+
+        # Call the utility function to save to Firestore and generate embedding
+        sucesso, erro_msg = salvar_contexto_usuario(str(self.request.user.username), contexto_texto, google_api_key_for_embedding)
+        
+        if not sucesso:
+            raise serializers.ValidationError(f"Failed to save context to Firestore: {erro_msg}")
+        
+        # Then save to Django model
+        serializer.save(user_profile=user_profile)
+
 
 @api_view(['POST'])
 def chat_endpoint(request):
@@ -15,39 +77,44 @@ def chat_endpoint(request):
     Endpoint principal do chat
     """
     try:
-        user_id = request.data.get('user_id')
-        query = request.data.get('query')
-        groq_api_key = request.data.get('groq_api_key')
-        google_api_key = request.data.get('google_api_key')
-
-        if not user_id or not query:
+        if not request.user.is_authenticated:
             return Response(
-                {"erro": "'user_id' e 'query' são obrigatórios"},
+                {"erro": "Autenticação necessária."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+        user_id = str(request.user.username) # Firebase UID is stored as username
+
+        query = request.data.get('query')
+        if not query:
+            return Response(
+                {"erro": "'query' é obrigatório"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        has_own_key = groq_api_key or google_api_key
-        if not has_own_key:
-            usage_tracking.setdefault(user_id, 0)
-            if usage_tracking[user_id] >= FREE_TIER_LIMIT:
-                return Response(
-                    {"error": "USAGE_LIMIT_EXCEEDED"},
-                    status=status.HTTP_429_TOO_MANY_REQUESTS
-                )
-            usage_tracking[user_id] += 1
+        # Get API keys from user profile
+        groq_api_key = user_profile.groq_api_key
+        google_api_key = user_profile.google_api_key
 
         resultado = processar_query_usuario(user_id, query, groq_api_key, google_api_key)
         
         return Response(resultado, status=status.HTTP_200_OK)
+
+    except QuotaExceededError as e:
+        return Response(
+            {"error": "QUOTA_EXCEEDED", "message": "A quota de uso da API do Google foi excedida. Verifique seu plano e faturamento."},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
     
     except InvalidGroqApiKey:
         return Response(
-            {"error": "INVALID_API_KEY", "provider": "groq"},
+            {"error": "INVALID_API_KEY", "provider": "groq", "message": "Chave Groq inválida."},
             status=status.HTTP_400_BAD_REQUEST
         )
     except InvalidGoogleApiKey:
         return Response(
-            {"error": "INVALID_API_KEY", "provider": "google"},
+            {"error": "INVALID_API_KEY", "provider": "google", "message": "Chave Google inválida."},
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
@@ -58,63 +125,34 @@ def chat_endpoint(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
-@api_view(['POST'])
-def salvar_contexto_endpoint(request):
-    """
-    Endpoint para salvar novo contexto
-    
-    Body esperado:
-    {
-        "user_id": "string",
-        "contexto": "string"
-    }
-    """
-    try:
-        user_id = request.data.get('user_id')
-        contexto = request.data.get('contexto')
-        
-        if not user_id or not contexto:
-            return Response(
-                {"erro": "'user_id' e 'contexto' são obrigatórios"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        sucesso, erro_msg = salvar_contexto_usuario(user_id, contexto)
-        
-        if sucesso:
-            return Response(
-                {"mensagem": "Contexto salvo com sucesso"},
-                status=status.HTTP_200_OK
-            )
-        else:
-            # Inclui a mensagem de erro detalhada para facilitar o debug no frontend
-            return Response(
-                {"erro": "Falha ao salvar contexto.", "detalhes": erro_msg},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    except Exception as e:
-        print(f"❌ Erro ao salvar: {e}")
-        return Response(
-            {"erro": str(e)},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+# Refactor salvar_contexto_endpoint into ContextListView's perform_create
+# @api_view(['POST'])
+# def salvar_contexto_endpoint(request):
+#     """
+#     Endpoint para salvar novo contexto
+#     """
+#     # ... (logic moved to ContextListView)
 
 @api_view(['GET'])
-def check_user_contexts(request, user_id):
-    """Verifica se usuário tem contextos"""
+def check_user_contexts(request, user_id=None):
+    """Verifica se usuário tem contextos no modelo Django"""
+    if not request.user.is_authenticated:
+        return Response(
+            {"erro": "Autenticação necessária."},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
     try:
-        db = init_firebase()
-        docs = db.collection('users').document(user_id).collection('inteligencia_critica').limit(1).stream()
-        
-        has_contexts = len(list(docs)) > 0
+        user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+        has_contexts = Context.objects.filter(user_profile=user_profile).exists()
+        count = Context.objects.filter(user_profile=user_profile).count()
         
         return Response({
             "has_contexts": has_contexts,
-            "count": 1 if has_contexts else 0
+            "count": count
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['GET'])
 def health_check(request):

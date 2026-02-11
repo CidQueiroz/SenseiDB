@@ -19,47 +19,39 @@ class InvalidGroqApiKey(Exception):
 class InvalidGoogleApiKey(Exception):
     pass
 
+class QuotaExceededError(Exception):
+    pass
+
 # ============================================ 
 # CONFIGURAÇÃO E INICIALIZAÇÃO
 # ============================================ 
 
-# Configuração Firebase (singleton)
-_firebase_initialized = False
-_db = None
-
+# Configuração Firebase
 def init_firebase() -> Optional[firestore.Client]:
     """
-    Inicializa o Firebase Admin SDK.
-    Em um ambiente Google Cloud (como Cloud Run), as credenciais são detectadas
-    automaticamente a partir da conta de serviço do ambiente.
+    Inicializa o Firebase Admin SDK, se ainda não tiver sido inicializado.
+    Retorna uma instância do cliente Firestore.
     """
-    global _firebase_initialized, _db
-    if not _firebase_initialized:
+    if not firebase_admin._apps:
         try:
-            print("🔑 Inicializando Firebase...")
-            
-            # Em produção (Cloud Run), usa Application Default Credentials da service account
-            print("🌐 Usando Application Default Credentials (ADC) da service account")
+            print("🔑 Tentando inicializar Firebase...")
+            # Em um ambiente Google Cloud (como Cloud Run), as credenciais são detectadas
+            # automaticamente a partir da conta de serviço do ambiente.
             firebase_admin.initialize_app()
-                
-            _db = firestore.client()
-            print("✅ Firebase inicializado com sucesso.")
 
             # Configura o Google AI SDK (se a chave estiver no ambiente)
             google_api_key = os.environ.get("GOOGLE_API_KEY")
             if google_api_key:
                 genai.configure(api_key=google_api_key)
                 print("✅ Google AI SDK configurado com API Key do ambiente.")
-            else:
-                print("⚠️ GOOGLE_API_KEY não encontrada no ambiente. Funções de embedding podem não funcionar se a conta de serviço não tiver permissão.")
 
-            _firebase_initialized = True
+            print("✅ Firebase inicializado com sucesso.")
         except Exception as e:
             print(f"❌ Erro fatal ao inicializar o Firebase: {e}")
             traceback.print_exc()
-            # Lançar a exceção impede que a aplicação continue em um estado inválido.
             raise
-    return _db
+    
+    return firestore.client()
 
 
 def carregar_persona(nome_arquivo: str) -> str:
@@ -136,8 +128,8 @@ def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5) -> Lis
             print("❌ GOOGLE_API_KEY não encontrada para embeddings")
             return []
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={api_key}"
-        payload = {"model": "models/text-embedding-004", "content": {"parts": [{"text": query}]}}
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent?key={api_key}"
+        payload = {"model": "embedding-001", "content": {"parts": [{"text": query}]}}
         response = requests.post(url, json=payload, timeout=30)
         
         if response.status_code != 200:
@@ -163,23 +155,23 @@ def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5) -> Lis
         print(f"❌ Erro ao buscar contextos: {e}")
         return []
 
-import google.auth
-import traceback
 
-def salvar_contexto_usuario(user_id: str, contexto_texto: str) -> Tuple[bool, Optional[str]]:
+def salvar_contexto_usuario(user_id: str, contexto_texto: str, google_api_key: Optional[str] = None) -> Tuple[bool, Optional[str]]:
     """Salva novo contexto com embedding na collection 'inteligencia_critica'"""
     try:
         print("\n--- INICIANDO salvar_contexto_usuario ---")
         
         # Passo 1: Gera o embedding
         print("LOG: Gerando embedding para o texto...")
-        google_api_key = os.environ.get("GOOGLE_API_KEY")
-        if not google_api_key:
-            raise InvalidGoogleApiKey("Chave da API do Google não encontrada no ambiente.")
+        # Prioriza a chave do usuário, depois a do ambiente
+        api_key_for_embedding = google_api_key or os.environ.get("GOOGLE_API_KEY")
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key={google_api_key}"
+        if not api_key_for_embedding:
+            raise InvalidGoogleApiKey("Chave da API do Google não encontrada para gerar embedding.")
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent?key={api_key_for_embedding}"
         payload = {
-            "model": "models/text-embedding-004", 
+            "model": "embedding-001", 
             "content": {"parts": [{"text": contexto_texto}]}
         }
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'}, timeout=30)
@@ -192,13 +184,13 @@ def salvar_contexto_usuario(user_id: str, contexto_texto: str) -> Tuple[bool, Op
         db = init_firebase()
         print(f"LOG: Cliente Firebase inicializado: {db}")
         
-        print(f"LOG: Acessando collection 'users'...")
+        print("LOG: Acessando collection 'users'...")
         users_collection = db.collection('users')
         
         print(f"LOG: Acessando document '{user_id}'...")
         user_doc = users_collection.document(user_id)
         
-        print(f"LOG: Acessando sub-collection 'inteligencia_critica'...")
+        print("LOG: Acessando sub-collection 'inteligencia_critica'...")
         contexts_collection = user_doc.collection('inteligencia_critica')
         
         print("LOG: Tentando executar .add() no Firestore...")
@@ -209,20 +201,42 @@ def salvar_contexto_usuario(user_id: str, contexto_texto: str) -> Tuple[bool, Op
         })
         print(f"LOG: ✅ Contexto salvo com sucesso no Firestore (inteligencia_critica) para o user_id: {user_id}")
         
-        print("--- FIM salvar_contexto_usuario ---\n")
+        print("--- FIM salvar_contexto_usuario ---\\n")
         return True, None
         
     except Exception as e:
         error_message = f"Erro detalhado: {e}"
         print(f"❌ Erro em salvar_contexto_usuario: {error_message}")
         traceback.print_exc()
-        print("--- FIM salvar_contexto_usuario (COM ERRO) ---\n")
+        print("--- FIM salvar_contexto_usuario (COM ERRO) ---\\n")
         return False, error_message
 
 
 # ============================================ 
 # FUNÇÕES DE GERAÇÃO DE RESPOSTA
 # ============================================ 
+
+def get_owner_google_keys() -> List[str]:
+    """Lê as chaves de API do proprietário das variáveis de ambiente."""
+    keys = []
+    i = 1
+    while True:
+        key = os.environ.get(f"GEMINI_API_KEY_{i}")
+        if key:
+            keys.append(key)
+            i += 1
+        else:
+            # Procura no máximo até 20 chaves para não entrar em loop infinito
+            if i > 20: 
+                break
+            # Continua verificando para o caso de haver um buraco na numeração (ex: 1, 2, 4)
+            i += 1
+            if i > 20: # Checagem dupla
+                 break
+
+    print(f"🔑 Encontradas {len(keys)} chaves de API do proprietário.")
+    return keys
+
 def gerar_resposta_groq(prompt: str, api_key: str, model: str = "llama-3.1-8b-instant") -> Tuple[Optional[str], Optional[str]]:
     """Gera resposta usando Groq via API REST (mais estável que o SDK)"""
     try:
@@ -275,7 +289,7 @@ def gerar_resposta_groq(prompt: str, api_key: str, model: str = "llama-3.1-8b-in
         return None, erro_msg
 
 
-def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name: str = "gemini-2.5-pro") -> Tuple[Optional[str], Optional[str]]:
+def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash") -> Tuple[Optional[str], Optional[str]]:
     """Gera resposta usando Google AI, com chave de API opcional."""
     try:
         # Se uma chave de API específica do usuário for fornecida, use a API REST para thread-safety
@@ -285,9 +299,13 @@ def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name
             
             response = requests.post(url, json=payload, timeout=45)
             
+            # Verifica erros de autenticação e quota
+            if response.status_code == 400 and "API key not valid" in response.text:
+                raise InvalidGoogleApiKey("Chave da API Google inválida.")
+            if response.status_code == 429:
+                 raise QuotaExceededError(f"Quota excedida para a chave: ...{api_key[-4:]}")
+
             if response.status_code != 200:
-                if "API key not valid" in response.text:
-                     raise InvalidGoogleApiKey("Chave da API Google inválida.")
                 return None, f"Erro na API do Google: {response.status_code} - {response.text}"
 
             response_json = response.json()
@@ -307,18 +325,23 @@ def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name
                 
             return parts[0].get('text'), None
 
-        # Caso contrário, use o SDK do genai configurado globalmente (nível gratuito/admin)
+        # Caso contrário, use o SDK do genai configurado globalmente
         else:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
             return response.text, None
-    except InvalidGoogleApiKey as e:
-        raise e # Repassa a exceção para a view
+            
+    except (InvalidGoogleApiKey, QuotaExceededError) as e:
+        raise e
     except Exception as e:
-        if "API key not valid" in str(e):
+        error_str = str(e)
+        if "400" in error_str and "API key not valid" in error_str:
             raise InvalidGoogleApiKey("Chave da API Google inválida.")
-        print(f"❌ Erro detalhado em gerar_resposta_google: {e}")
-        return None, str(e)
+        if "429" in error_str and "quota" in error_str.lower():
+            raise QuotaExceededError(error_str)
+            
+        print(f"❌ Erro detalhado em gerar_resposta_google: {error_str}")
+        return None, error_str
 
 
 # ============================================ 
@@ -331,11 +354,7 @@ def processar_query_usuario(
     google_api_key: Optional[str] = None
 ) -> Dict[str, any]:
     """
-    Processa a query do usuário com RAG e IA
-    Sistema de fallback em cascata:
-    1. Groq do usuário (se fornecido)
-    2. Google AI do usuário (se fornecido)
-    3. Google AI padrão do ambiente (fallback final)
+    Processa a query do usuário com RAG e IA, com sistema de rotação de chaves.
     """ 
     try:
         print(f"🔍 Buscando contextos para user_id: {user_id}")
@@ -347,110 +366,74 @@ def processar_query_usuario(
             print("⚠️ Nenhum contexto encontrado")
         
         prompt_sistema = gerar_prompt_sistema(contextos_relevantes, user_id)
-        prompt_final = f"""{prompt_sistema}
-
-        ---
-
-        **PERGUNTA/MENSAGEM DO USUÁRIO:**
-        {query}
-
-        ---
-
-        **INSTRUÇÕES FINAIS:**
-        - Responda em português do Brasil
-        - Seja conciso mas completo
-        - Use markdown para formatação (negrito, listas, etc)
-        - Termine com uma pergunta reflexiva ou próximo passo claro
-        """
+        prompt_final = f"""{prompt_sistema}\n\n---\n**PERGUNTA/MENSAGEM DO USUÁRIO:**\n{query}\n\n---\n\n**INSTRUÇÕES FINAIS:**\n- Responda em português do Brasil\n- Seja conciso mas completo\n- Use markdown para formatação (negrito, listas, etc)\n- Termine com uma pergunta reflexiva ou próximo passo claro"""
         
         resposta_ia = None
         erro = None
         ia_usada = None
         erros_acumulados = []
 
-        # ADMIN: usa as chaves do ambiente
-        if user_id == ADMIN_USER_ID:
-            admin_groq_key = os.environ.get("GROQ_API_KEY")
-            if admin_groq_key:
-                print("🔑 Admin tentando Groq (chave do ambiente)")
-                try:
-                    resposta_ia, erro = gerar_resposta_groq(prompt_final, admin_groq_key)
-                    if resposta_ia:
-                        ia_usada = "groq"
-                        print("✅ Admin: Resposta gerada com Groq")
-                    else:
-                        erros_acumulados.append(f"Groq Admin: {erro}")
-                except InvalidGroqApiKey as e:
-                    print(f"❌ Admin: Chave Groq inválida - {e}")
-                    erros_acumulados.append(f"Groq Admin: {str(e)}")
-            
-            if not resposta_ia:
-                print("🌐 Admin tentando Google AI (padrão do ambiente)")
-                try:
-                    resposta_ia, erro = gerar_resposta_google(prompt_final)
-                    if resposta_ia:
-                        ia_usada = "google"
-                        print("✅ Admin: Resposta gerada com Google AI")
-                    else:
-                        erros_acumulados.append(f"Google Admin: {erro}")
-                except InvalidGoogleApiKey as e:
-                    print(f"❌ Admin: Chave Google inválida - {e}")
-                    erros_acumulados.append(f"Google Admin: {str(e)}")
+        # 1️⃣ Tenta a chave Groq do usuário
+        if groq_api_key:
+            print("🔑 Usuário tentando Groq (chave própria)")
+            try:
+                resposta_ia, erro = gerar_resposta_groq(prompt_final, groq_api_key)
+                if resposta_ia:
+                    ia_usada = "groq"
+                else:
+                    erros_acumulados.append(f"Groq (usuário): {erro}")
+            except InvalidGroqApiKey as e:
+                erros_acumulados.append(f"Groq (usuário): {str(e)}")
+        
+        # 2️⃣ Tenta a chave Google do usuário
+        if not resposta_ia and google_api_key:
+            print("🔑 Usuário tentando Google AI (chave própria)")
+            try:
+                resposta_ia, erro = gerar_resposta_google(prompt_final, api_key=google_api_key)
+                if resposta_ia:
+                    ia_usada = "google_user"
+                else:
+                    erros_acumulados.append(f"Google (usuário): {erro}")
+            except (InvalidGoogleApiKey, QuotaExceededError) as e:
+                erros_acumulados.append(f"Google (usuário): {str(e)}")
 
-        # USUÁRIO NORMAL: tenta em cascata
-        else:
-            # 1️⃣ Primeira tentativa: Groq do usuário
-            if groq_api_key:
-                print("🔑 Usuário tentando Groq (chave própria)")
-                try:
-                    resposta_ia, erro = gerar_resposta_groq(prompt_final, groq_api_key)
-                    if resposta_ia:
-                        ia_usada = "groq"
-                        print("✅ Usuário: Resposta gerada com Groq")
-                    else:
-                        print(f"⚠️ Groq falhou: {erro}")
-                        erros_acumulados.append(f"Groq usuário: {erro}")
-                except InvalidGroqApiKey as e:
-                    print(f"❌ Chave Groq inválida - {e}")
-                    erros_acumulados.append(f"Groq usuário: {str(e)}")
-            
-            # 2️⃣ Segunda tentativa: Google AI do usuário
-            if not resposta_ia and google_api_key:
-                print("🔑 Usuário tentando Google AI (chave própria)")
-                try:
-                    resposta_ia, erro = gerar_resposta_google(prompt_final, api_key=google_api_key)
-                    if resposta_ia:
-                        ia_usada = "google_user"
-                        print("✅ Usuário: Resposta gerada com Google AI próprio")
-                    else:
-                        print(f"⚠️ Google AI usuário falhou: {erro}")
-                        erros_acumulados.append(f"Google usuário: {erro}")
-                except InvalidGoogleApiKey as e:
-                    print(f"❌ Chave Google usuário inválida - {e}")
-                    erros_acumulados.append(f"Google usuário: {str(e)}")
-            
-            # 3️⃣ Terceira tentativa (FALLBACK FINAL): Google AI padrão do ambiente
-            if not resposta_ia:
-                print("🌐 FALLBACK: Tentando Google AI padrão do ambiente")
-                try:
-                    resposta_ia, erro = gerar_resposta_google(prompt_final)
-                    if resposta_ia:
-                        ia_usada = "google_default"
-                        print("✅ FALLBACK: Resposta gerada com Google AI padrão")
-                    else:
-                        print(f"❌ Google AI padrão falhou: {erro}")
-                        erros_acumulados.append(f"Google padrão: {erro}")
-                except Exception as e:
-                    print(f"❌ Google AI padrão falhou: {e}")
-                    erros_acumulados.append(f"Google padrão: {str(e)}")
-
-        # Verifica se conseguiu gerar resposta
+        # 3️⃣ Fallback: Rotação de chaves do proprietário
         if not resposta_ia:
-            erro_completo = " | ".join(erros_acumulados) if erros_acumulados else "Nenhuma resposta foi gerada."
+            print("🌐 FALLBACK: Tentando chaves do proprietário em rotação")
+            owner_keys = get_owner_google_keys()
+            if not owner_keys:
+                print("⚠️ Nenhuma chave de API do proprietário encontrada no ambiente.")
+                erros_acumulados.append("Nenhuma chave de API do proprietário configurada no backend.")
+            else:
+                for i, key in enumerate(owner_keys):
+                    print(f"🔑 Tentando chave do proprietário nº {i+1}")
+                    try:
+                        resposta_ia, erro = gerar_resposta_google(prompt_final, api_key=key)
+                        if resposta_ia:
+                            ia_usada = f"google_owner_key_{i+1}"
+                            print(f"✅ Resposta gerada com a chave do proprietário nº {i+1}")
+                            break
+                        else:
+                            erros_acumulados.append(f"Proprietário (chave {i+1}): {erro}")
+                    except QuotaExceededError as e:
+                        print(f"⚠️ Quota excedida para a chave do proprietário nº {i+1}")
+                        erros_acumulados.append(f"Proprietário (chave {i+1}): {e}")
+                        continue
+                    except InvalidGoogleApiKey as e:
+                        print(f"❌ Chave do proprietário nº {i+1} é inválida.")
+                        erros_acumulados.append(f"Proprietário (chave {i+1}): {e}")
+                        continue
+
+        # Se todas as tentativas falharem, lança a exceção que será pega pela view
+        if not resposta_ia:
+            # Se o último erro foi de quota, lança QuotaExceededError para a view
+            if any("quota" in str(e).lower() for e in erros_acumulados):
+                 raise QuotaExceededError("Todas as chaves de API disponíveis atingiram o limite de quota. Por favor, insira sua própria chave para continuar.")
+
+            erro_completo = " | ".join(erros_acumulados) if erros_acumulados else "Nenhuma resposta pôde ser gerada."
             raise Exception(f"Todas as IAs falharam: {erro_completo}")
-        
+
         print(f"✅ Resposta final gerada com: {ia_usada.upper()}")
-        
         
         return {
             "resposta": resposta_ia,
@@ -458,9 +441,8 @@ def processar_query_usuario(
             "num_contextos": len(contextos_relevantes)
         }
     
-    except (InvalidGroqApiKey, InvalidGoogleApiKey) as e:
+    except (InvalidGroqApiKey, InvalidGoogleApiKey, QuotaExceededError) as e:
         raise e
     except Exception as e:
         print(f"❌ Erro ao processar query: {e}")
         raise
-

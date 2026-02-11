@@ -2,12 +2,14 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { ThemeProvider, Header, Footer, CDKFavicon } from '@cidqueiroz/cdkteck-ui';
-import { useAuth } from './context/AuthContext';
-import LoginPage from './pages/LoginPage';
+import { useAuth } from './context/AuthContext.jsx';
+import LoginPage from './pages/LoginPage.jsx';
 import ChatPage from './pages/ChatPage';
 import '@cidqueiroz/cdkteck-ui/global.css';
 
-const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
+
+
+const PrivateRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -17,10 +19,17 @@ const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
   return user ? children : <Navigate to="/login" />;
 };
 
-const App: React.FC = () => {
-  const { user, isLoading } = useAuth();
+const App = () => {
+  const { user, isLoading, getIdToken } = useAuth(); // Get getIdToken from useAuth
   const location = useLocation();
   const [isContactModalOpen, setContactModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const toggleMobileSidebar = () => {
+    setMobileSidebarOpen(!isMobileSidebarOpen);
+  };
+
+  const shouldShowHeaderFooter = location.pathname !== '/login' && location.pathname !== '/';
 
   // Effect to apply/remove 'logged-in' class to body
   useEffect(() => {
@@ -31,19 +40,21 @@ const App: React.FC = () => {
         document.body.classList.remove('logged-in');
       }
     }
-  }, [user, isLoading]);
+  }, [user, isLoading]); // Removed getIdToken from dependency array as it's not used here
 
-  const ReactRouterLink = (props: any) => (
+  const ReactRouterLink = (props) => (
     <Link {...props} />
   );
 
   return (
     <ThemeProvider>
       <div className="app-container">
-        <Header 
-          LinkComponent={ReactRouterLink}
-          usePathname={() => location.pathname} // Correctly use the hook's value
-        />
+        {shouldShowHeaderFooter && (
+          <Header 
+            LinkComponent={ReactRouterLink}
+            usePathname={() => location.pathname} // Correctly use the hook's value
+          />
+        )}
         <main className="flex-grow">
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -51,16 +62,21 @@ const App: React.FC = () => {
               path="/"
               element={
                 <PrivateRoute>
-                  <ChatPage />
+                  <ChatPage 
+                    isMobileSidebarOpen={isMobileSidebarOpen}
+                    toggleMobileSidebar={toggleMobileSidebar}
+                  />
                 </PrivateRoute>
               }
             />
           </Routes>
         </main>
-        <Footer 
-          openContactModal={() => setContactModalOpen(true)}
-          LinkComponent={ReactRouterLink}
-        />
+        {shouldShowHeaderFooter && (
+          <Footer 
+            openContactModal={() => setContactModalOpen(true)}
+            LinkComponent={ReactRouterLink}
+          />
+        )}
         {/* TODO: Add ContactModal component and manage 'isContactModalOpen' state */}
       </div>
     </ThemeProvider>
