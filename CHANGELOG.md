@@ -1,3 +1,19 @@
+# [5.1.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.3...v5.1.0) (2026-02-11)
+
+
+### Bug Fixes
+
+* **deploy:** correção de deploy e credenciais ([ed6064d](https://github.com/CidQueiroz/SenseiDB/commit/ed6064de22de1cad2e13747d683c34915c1e947f))
+* **index:** correcao do index.html ([589406c](https://github.com/CidQueiroz/SenseiDB/commit/589406c71f1a33ae082fbd1ee7cd0136f955945a))
+* **package:** corrigindo package ([c684a64](https://github.com/CidQueiroz/SenseiDB/commit/c684a643c09d5b8fd9fbc2f7a5fc259f898322d8))
+* remoção de arquivos sensíveis/lixo do rastreamento ([508e8af](https://github.com/CidQueiroz/SenseiDB/commit/508e8af026e62381fc2e2dfcaf67406d02469a86))
+* **settings:** correção do CORS ([274f19c](https://github.com/CidQueiroz/SenseiDB/commit/274f19c34441258d6e096ed52572705995f10751))
+
+
+### Features
+
+* **css file:** added a new CSS file ([2fbc1a1](https://github.com/CidQueiroz/SenseiDB/commit/2fbc1a16df2ac448cd72eecb73d99846c8d5f890))
+
 ## [5.0.6](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.5...v5.0.6) (2025-12-17)
 
 
