@@ -1,13 +1,11 @@
-// senseidb-agent/frontend/src/App.tsx
+// SenseiDB/frontend/src/App.tsx
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
-import { ThemeProvider, Header, Footer, CDKFavicon } from '@cidqueiroz/cdkteck-ui';
+import { ThemeProvider, Header, Footer } from '@cidqueiroz/cdkteck-ui';
 import { useAuth } from './context/AuthContext.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import ChatPage from './pages/ChatPage';
 import '@cidqueiroz/cdkteck-ui/global.css';
-
-
 
 const PrivateRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -20,7 +18,7 @@ const PrivateRoute = ({ children }) => {
 };
 
 const App = () => {
-  const { user, isLoading, getIdToken } = useAuth(); // Get getIdToken from useAuth
+  const { user, isLoading } = useAuth();
   const location = useLocation();
   const [isContactModalOpen, setContactModalOpen] = useState(false);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -29,9 +27,9 @@ const App = () => {
     setMobileSidebarOpen(!isMobileSidebarOpen);
   };
 
-  const shouldShowHeaderFooter = location.pathname !== '/login' && location.pathname !== '/';
+  // Exibimos Header e Footer apenas na tela de login
+  const shouldShowHeaderFooter = location.pathname === '/login';
 
-  // Effect to apply/remove 'logged-in' class to body
   useEffect(() => {
     if (!isLoading) {
       if (user) {
@@ -40,7 +38,7 @@ const App = () => {
         document.body.classList.remove('logged-in');
       }
     }
-  }, [user, isLoading]); // Removed getIdToken from dependency array as it's not used here
+  }, [user, isLoading]);
 
   const ReactRouterLink = (props) => (
     <Link {...props} />
@@ -52,7 +50,7 @@ const App = () => {
         {shouldShowHeaderFooter && (
           <Header 
             LinkComponent={ReactRouterLink}
-            usePathname={() => location.pathname} // Correctly use the hook's value
+            usePathname={() => location.pathname}
           />
         )}
         <main className="flex-grow">
@@ -77,7 +75,6 @@ const App = () => {
             LinkComponent={ReactRouterLink}
           />
         )}
-        {/* TODO: Add ContactModal component and manage 'isContactModalOpen' state */}
       </div>
     </ThemeProvider>
   );

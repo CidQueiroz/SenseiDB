@@ -1,4 +1,4 @@
-// senseidb-agent/frontend/src/components/ApiConfigModal.tsx
+// SenseiDB/frontend/src/components/ApiConfigModal.tsx
 import React, { useState, useEffect } from 'react';
 import { api } from '../api'; // Your Axios instance for backend calls
 import { useAuth } from '../context/AuthContext'; // To potentially show user info

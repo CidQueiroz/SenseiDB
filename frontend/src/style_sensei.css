@@ -1,4 +1,4 @@
-/* senseidb-agent/frontend/src/style_sensei.css */
+/* SenseiDB/frontend/src/style_sensei.css */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Montserrat:wght@400;600&display=swap');
 
 :root {
@@ -995,7 +995,7 @@ body[data-theme='light'] .chat-input-area button:hover {
     background: var(--cor-hover);
 }
 
-/* From: senseidb-agent/frontend/src/components/TutorialOverlay.css */
+/* From: SenseiDB/frontend/src/components/TutorialOverlay.css */
 
 .tutorial-overlay {
     position: fixed;

@@ -37,7 +37,7 @@ echo ""
 echo -e "${BLUE}🚀 Deploy do Backend Django usando o Dockerfile...${NC}"
 
 # O comando agora roda da raiz, e o --source=. faz com que ele encontre o Dockerfile
-gcloud run deploy senseidb-agent \
+gcloud run deploy senseidb \
     --source . \
     --platform managed \
     --region $REGION \
@@ -52,7 +52,7 @@ gcloud run deploy senseidb-agent \
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Backend deployado com sucesso!${NC}"
-    BACKEND_URL=$(gcloud run services describe senseidb-agent --region $REGION --format="value(status.url)")
+    BACKEND_URL=$(gcloud run services describe senseidb --region $REGION --format="value(status.url)")
     echo -e "${GREEN}📍 URL do Backend: $BACKEND_URL${NC}"
 else
     echo -e "${RED}❌ Erro no deploy do backend${NC}"

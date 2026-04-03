@@ -1,4 +1,4 @@
-// senseidb-agent/frontend/src/components/MobileSidebar.tsx
+// SenseiDB/frontend/src/components/MobileSidebar.tsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '@cidqueiroz/cdkteck-ui';

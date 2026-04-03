@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "target": "senseidb-agent",
+    "target": "senseidb",
     "public": "frontend",
     "ignore": [
       "firebase.json",
@@ -11,7 +11,7 @@
       {
         "source": "**",
         "run": {
-          "serviceId": "senseidb-agent",
+          "serviceId": "senseidb",
           "region": "southamerica-east1"
         }
       }

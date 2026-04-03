@@ -84,7 +84,7 @@ jobs:
             --region=${{ env.REGION }} \
             --platform=managed \
             --allow-unauthenticated \
-            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }}" \
+            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }},GEMINI_API_KEY_1=${{ secrets.GEMINI_API_KEY_1 }},GEMINI_API_KEY_2=${{ secrets.GEMINI_API_KEY_2 }},GEMINI_API_KEY_3=${{ secrets.GEMINI_API_KEY_3 }},GEMINI_API_KEY_4=${{ secrets.GEMINI_API_KEY_4 }},GEMINI_API_KEY_5=${{ secrets.GEMINI_API_KEY_5 }},GEMINI_API_KEY_6=${{ secrets.GEMINI_API_KEY_6 }},GEMINI_API_KEY_7=${{ secrets.GEMINI_API_KEY_7 }},GEMINI_API_KEY_8=${{ secrets.GEMINI_API_KEY_8 }},GEMINI_API_KEY_9=${{ secrets.GEMINI_API_KEY_9 }},GEMINI_API_KEY_10=${{ secrets.GEMINI_API_KEY_10 }}" \
             --service-account=${{ secrets.GCP_SA_EMAIL }}
 
   deploy-frontend:
@@ -102,13 +102,19 @@ jobs:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: ./frontend/package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@cidqueiroz'
 
-      - name: Install root dependencies for cdkteck-ui
+      - name: Configure NPM for GitHub Packages
+        run: |
+          echo "@cidqueiroz:registry=https://npm.pkg.github.com" > ./frontend/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ./frontend/.npmrc
+
+      - name: Install dependencies
         run: npm install
-
-      - name: Install frontend dependencies
-        run: npm ci
         working-directory: ./frontend
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Frontend
         run: npm run build

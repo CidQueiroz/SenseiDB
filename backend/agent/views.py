@@ -1,9 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import status, generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User # Import Django's User model
+import os
 import traceback
 
 from .utils import (
@@ -87,6 +88,8 @@ def chat_endpoint(request):
         user_id = str(request.user.username) # Firebase UID is stored as username
 
         query = request.data.get('query')
+        preferred_provider = request.data.get('provider') # Get preferred provider from request
+
         if not query:
             return Response(
                 {"erro": "'query' é obrigatório"},
@@ -97,7 +100,13 @@ def chat_endpoint(request):
         groq_api_key = user_profile.groq_api_key
         google_api_key = user_profile.google_api_key
 
-        resultado = processar_query_usuario(user_id, query, groq_api_key, google_api_key)
+        resultado = processar_query_usuario(
+            user_id, 
+            query, 
+            groq_api_key, 
+            google_api_key, 
+            preferred_provider=preferred_provider
+        )
         
         return Response(resultado, status=status.HTTP_200_OK)
 

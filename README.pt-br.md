@@ -100,8 +100,8 @@ A aplicação é containerizada para uma configuração fácil.
 
 ### 1. Clone o Repositório
 ```bash
-git clone https://github.com/CidQueiroz/SenseiDB-Agent.git
-cd SenseiDB-Agent
+git clone https://github.com/CidQueiroz/SenseiDB.git
+cd Sensei
 ```
 
 ### 2. Configure as Variáveis de Ambiente

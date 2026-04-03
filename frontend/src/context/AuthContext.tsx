@@ -1,19 +1,34 @@
-// GestaoRPD/frontend/src/context/AuthContext.jsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, FacebookAuthProvider, GithubAuthProvider } from 'firebase/auth';
+// SenseiDB/frontend/src/context/AuthContext.tsx
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, FacebookAuthProvider, GithubAuthProvider, type User } from 'firebase/auth';
 import { auth } from '../firebase';
 export { auth }; // Export auth instance
 
-const AuthContext = createContext();
+interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  loginWithFace: () => Promise<void>;
+  loginWithGitHub: () => Promise<void>;
+  getIdToken: () => Promise<string | null>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
 };
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -23,12 +38,12 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
@@ -36,12 +51,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (email, password) => {
+  const register = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
@@ -54,7 +69,7 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       await signOut(auth);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
@@ -68,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
@@ -82,7 +97,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const provider = new FacebookAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {
@@ -97,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const provider = new GithubAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
       throw err;
     } finally {

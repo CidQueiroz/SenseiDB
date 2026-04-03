@@ -128,8 +128,8 @@ def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5) -> Lis
             print("❌ GOOGLE_API_KEY não encontrada para embeddings")
             return []
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent?key={api_key}"
-        payload = {"model": "embedding-001", "content": {"parts": [{"text": query}]}}
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
+        payload = {"model": "models/gemini-embedding-001", "content": {"parts": [{"text": query}]}}
         response = requests.post(url, json=payload, timeout=30)
         
         if response.status_code != 200:
@@ -163,19 +163,28 @@ def salvar_contexto_usuario(user_id: str, contexto_texto: str, google_api_key: O
         
         # Passo 1: Gera o embedding
         print("LOG: Gerando embedding para o texto...")
-        # Prioriza a chave do usuário, depois a do ambiente
+        # Prioriza a chave do usuário, depois a do ambiente para garantir RAG funcional
         api_key_for_embedding = google_api_key or os.environ.get("GOOGLE_API_KEY")
         
         if not api_key_for_embedding:
-            raise InvalidGoogleApiKey("Chave da API do Google não encontrada para gerar embedding.")
+            # Tenta buscar das chaves do proprietário se a env GOOGLE_API_KEY não estiver setada
+            owner_keys = get_owner_google_keys()
+            if owner_keys:
+                api_key_for_embedding = owner_keys[0]
+                print("LOG: Usando primeira chave de proprietário para embedding.")
+            else:
+                raise InvalidGoogleApiKey("Nenhuma chave Google disponível para gerar embedding (RAG).")
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent?key={api_key_for_embedding}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key_for_embedding}"
         payload = {
-            "model": "embedding-001", 
+            "model": "models/gemini-embedding-001", 
             "content": {"parts": [{"text": contexto_texto}]}
         }
         response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'}, timeout=30)
-        response.raise_for_status()
+        
+        if response.status_code != 200:
+             return False, f"Erro na API de embedding ({response.status_code}): {response.text}"
+             
         embedding = response.json()['embedding']['values']
         print("LOG: Embedding gerado com sucesso.")
 
@@ -289,7 +298,7 @@ def gerar_resposta_groq(prompt: str, api_key: str, model: str = "llama-3.1-8b-in
         return None, erro_msg
 
 
-def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash") -> Tuple[Optional[str], Optional[str]]:
+def gerar_resposta_google(prompt: str, api_key: Optional[str] = None, model_name: str = "gemini-2.0-flash") -> Tuple[Optional[str], Optional[str]]:
     """Gera resposta usando Google AI, com chave de API opcional."""
     try:
         # Se uma chave de API específica do usuário for fornecida, use a API REST para thread-safety
@@ -351,7 +360,8 @@ def processar_query_usuario(
     user_id: str, 
     query: str, 
     groq_api_key: Optional[str] = None,
-    google_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None,
+    preferred_provider: Optional[str] = None
 ) -> Dict[str, any]:
     """
     Processa a query do usuário com RAG e IA, com sistema de rotação de chaves.
@@ -373,33 +383,62 @@ def processar_query_usuario(
         ia_usada = None
         erros_acumulados = []
 
-        # 1️⃣ Tenta a chave Groq do usuário
-        if groq_api_key:
-            print("🔑 Usuário tentando Groq (chave própria)")
-            try:
-                resposta_ia, erro = gerar_resposta_groq(prompt_final, groq_api_key)
-                if resposta_ia:
-                    ia_usada = "groq"
-                else:
-                    erros_acumulados.append(f"Groq (usuário): {erro}")
-            except InvalidGroqApiKey as e:
-                erros_acumulados.append(f"Groq (usuário): {str(e)}")
-        
-        # 2️⃣ Tenta a chave Google do usuário
-        if not resposta_ia and google_api_key:
-            print("🔑 Usuário tentando Google AI (chave própria)")
-            try:
-                resposta_ia, erro = gerar_resposta_google(prompt_final, api_key=google_api_key)
-                if resposta_ia:
-                    ia_usada = "google_user"
-                else:
-                    erros_acumulados.append(f"Google (usuário): {erro}")
-            except (InvalidGoogleApiKey, QuotaExceededError) as e:
-                erros_acumulados.append(f"Google (usuário): {str(e)}")
+        # Determina a ordem de tentativa baseada na preferência
+        tentativas = []
+        if preferred_provider == 'groq':
+            tentativas = [('groq', groq_api_key), ('google_user', google_api_key)]
+        elif preferred_provider in ['google', 'google_user']:
+            tentativas = [('google_user', google_api_key), ('groq', groq_api_key)]
+        else:
+            # Padrão: tenta Groq primeiro (geralmente mais rápido)
+            tentativas = [('groq', groq_api_key), ('google_user', google_api_key)]
 
-        # 3️⃣ Fallback: Rotação de chaves do proprietário
+        # 1️⃣ e 2️⃣ Tenta as chaves do usuário na ordem definida
+        for provedor, chave in tentativas:
+            if not chave:
+                continue
+                
+            if provedor == 'groq':
+                print("🔑 Usuário tentando Groq (chave própria)")
+                try:
+                    resposta_ia, erro = gerar_resposta_groq(prompt_final, chave)
+                    if resposta_ia:
+                        ia_usada = "groq"
+                        break
+                    else:
+                        erros_acumulados.append(f"Groq (usuário): {erro}")
+                except InvalidGroqApiKey as e:
+                    erros_acumulados.append(f"Groq (usuário): {str(e)}")
+            
+            elif provedor == 'google_user':
+                print("🔑 Usuário tentando Google AI (chave própria)")
+                try:
+                    resposta_ia, erro = gerar_resposta_google(prompt_final, api_key=chave)
+                    if resposta_ia:
+                        ia_usada = "google_user"
+                        break
+                    else:
+                        erros_acumulados.append(f"Google (usuário): {erro}")
+                except (InvalidGoogleApiKey, QuotaExceededError) as e:
+                    erros_acumulados.append(f"Google (usuário): {str(e)}")
+
+        # 3️⃣ Fallback: Tenta Groq com chave do proprietário primeiro (mais estável e rápido)
         if not resposta_ia:
-            print("🌐 FALLBACK: Tentando chaves do proprietário em rotação")
+            admin_groq_key = os.environ.get("GROQ_API_KEY")
+            if admin_groq_key:
+                print("🌐 FALLBACK: Tentando Groq do proprietário")
+                try:
+                    resposta_ia, erro = gerar_resposta_groq(prompt_final, admin_groq_key)
+                    if resposta_ia:
+                        ia_usada = "groq_owner"
+                        print("✅ Resposta gerada com Groq do proprietário")
+                except Exception as e:
+                    print(f"⚠️ Groq do proprietário falhou: {e}")
+                    erros_acumulados.append(f"Groq proprietário: {str(e)}")
+
+        # 4️⃣ Fallback Final: Rotação de chaves do proprietário Google
+        if not resposta_ia:
+            print("🌐 FALLBACK FINAL: Tentando chaves do proprietário Google em rotação")
             owner_keys = get_owner_google_keys()
             if not owner_keys:
                 print("⚠️ Nenhuma chave de API do proprietário encontrada no ambiente.")

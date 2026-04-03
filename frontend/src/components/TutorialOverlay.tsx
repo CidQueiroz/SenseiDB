@@ -1,7 +1,6 @@
-// senseidb-agent/frontend/src/components/TutorialOverlay.tsx
+// SenseiDB/frontend/src/components/TutorialOverlay.tsx
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '@cidqueiroz/cdkteck-ui';
 import '../style_sensei.css'; // Import the new CSS file
 
 interface TutorialOverlayProps {
@@ -156,12 +155,12 @@ const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ isOpen, toggleOverlay
         </div>
 
         <div className="tutorial-buttons">
-          <Button variant="secondary" onClick={previousSlide} disabled={currentSlide === 1}>
+          <button className="tutorial-btn-secondary" onClick={previousSlide} disabled={currentSlide === 1}>
             ← Anterior
-          </Button>
-          <Button variant="primary" onClick={nextSlide}>
+          </button>
+          <button className="tutorial-btn-primary" onClick={nextSlide}>
             {currentSlide === totalSlides ? 'Começar! 🚀' : 'Próximo →'}
-          </Button>
+          </button>
         </div>
 
         <div className="tutorial-skip" onClick={skipTutorial}>

@@ -7,8 +7,6 @@ import TutorialOverlay from '../components/TutorialOverlay';
 import '../style_sensei.css';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
-import { useTheme } from '@cidqueiroz/cdkteck-ui'; // Import useTheme
-import { useLocation } from 'react-router-dom'; // Import useLocation
 
 interface ChatPageProps {
   isMobileSidebarOpen: boolean;
@@ -17,8 +15,6 @@ interface ChatPageProps {
 
 const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSidebar }) => {
   const { user } = useAuth();
-  const { theme } = useTheme(); // Use theme context for logo
-  const location = useLocation(); // Get current location
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [isTutorialOverlayOpen, setIsTutorialOverlayOpen] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
@@ -35,8 +31,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
   const clearChatMessages = () => setMessages([]);
   const toggleSidebarCollapsed = () => setIsSidebarCollapsed(!isSidebarCollapsed); // New toggle function
 
-  const addMessage = (content: string, role: 'user' | 'assistant', aiUsed?: string) => {
-    setMessages((prevMessages) => [...prevMessages, { content, role, aiUsed }]);
+  const addMessage = (content: string, role: 'user' | 'assistant', aiUsed?: string, numContextos?: number) => {
+    setMessages((prevMessages) => [...prevMessages, { content, role, aiUsed, numContextos }]);
   };
 
   const scrollToBottom = () => {
@@ -56,10 +52,17 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
     setIsLoading(true);
 
     try {
-      const response = await api.post('/chat/', { query: userMessage });
-      const { resposta, ia_usada } = response.data;
-      addMessage(resposta, 'assistant', ia_usada);
-    } catch (error) {
+      // Get preferred provider from localStorage (migrated logic from old version)
+      const preferredProvider = localStorage.getItem('api_provider') || 'groq';
+
+      const response = await api.post('/chat/', { 
+        query: userMessage,
+        provider: preferredProvider 
+      });
+      
+      const { resposta, ia_usada, num_contextos } = response.data;
+      addMessage(resposta, 'assistant', ia_usada, num_contextos);
+    } catch (error: any) {
       console.error('Error sending message to backend:', error);
       let errorMessage = 'O Sensei está pensando muito forte, tente simplificar a pergunta ou verifique sua conexão.';
       if (error.response && error.response.data && error.response.data.error === 'INVALID_API_KEY') {

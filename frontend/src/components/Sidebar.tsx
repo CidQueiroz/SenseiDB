@@ -1,5 +1,5 @@
-// senseidb-agent/frontend/src/components/Sidebar.tsx
-import React, { useState } from 'react';
+// SenseiDB/frontend/src/components/Sidebar.tsx
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '@cidqueiroz/cdkteck-ui';
 import { api } from '../api'; // Import your API instance
@@ -17,6 +17,22 @@ const Sidebar: React.FC<SidebarProps> = ({ toggleApiModal, clearChat, isCollapse
   const [newContext, setNewContext] = useState('');
   const [savingContext, setSavingContext] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSynced, setIsSynced] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkSync = async () => {
+      if (user) {
+        try {
+          const response = await api.get('/api-keys/');
+          const { groq_api_key, google_api_key } = response.data;
+          setIsSynced(!!(groq_api_key || google_api_key));
+        } catch (error) {
+          setIsSynced(false);
+        }
+      }
+    };
+    checkSync();
+  }, [user]);
 
   const handleSaveContext = async () => {
     if (!newContext.trim() || !user) return;
@@ -72,8 +88,12 @@ const Sidebar: React.FC<SidebarProps> = ({ toggleApiModal, clearChat, isCollapse
             {!isCollapsed && <span>{user.email}</span>}
           </div>
           <div className="user-level">
-            <span style={{ color: '#06f0a8' }}>●</span>
-            {!isCollapsed && <span>Nível Gratuito</span>}
+            <span style={{ color: isSynced ? '#06f0a8' : '#eb1d32' }}>●</span>
+            {!isCollapsed && (
+              <span title={isSynced ? 'Chaves sincronizadas' : 'Sem chaves configuradas'}>
+                {isSynced ? '🚀 Modo Master' : 'Nível Gratuito'}
+              </span>
+            )}
             <button id="desktop-theme-toggle-btn" className="theme-toggle" onClick={toggleTheme}>
               {theme === 'light' ? '🌙' : '☀️'}
             </button>

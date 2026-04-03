@@ -1,27 +1,31 @@
 FROM python:3.11-slim
 
+# Evita que o Python gere arquivos .pyc e permite logs em tempo real
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=senseidb_backend.settings
+ENV PORT=8000
+
 WORKDIR /app
 
 # Instala dependências do sistema
-RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
+# gcc e python3-dev são necessários para compilar numpy e outras libs se necessário
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copia requirements
+# Atualiza pip e instala dependências
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Copia aplicação
-# Since the Dockerfile is now inside 'backend/', COPY . . will copy all contents of 'backend/'
+# Copia o código da aplicação
 COPY . .
 
-# Coleta estáticos
-RUN python manage.py collectstatic --noinput || true
+# Expõe a porta (variável dinâmica para Cloud Run ou fixa para OCI)
+EXPOSE 8000
 
-# Executa as migrações do banco de dados
-RUN python manage.py migrate
-
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
-
-EXPOSE 8080
-
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 120 senseidb_backend.wsgi:application
+# Script de entrada para garantir migrações e coleta de estáticos antes de iniciar
+# O uso de sh -c permite a expansão da variável $PORT
+CMD ["sh", "-c", "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 senseidb_backend.wsgi:application"]
