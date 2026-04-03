@@ -1,3 +1,11 @@
+## [5.1.2](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.1...v5.1.2) (2026-04-03)
+
+
+### Bug Fixes
+
+* **ci:** fix frontend deploy cache and npm authentication ([eb0861a](https://github.com/CidQueiroz/SenseiDB/commit/eb0861a074946aa511c0eec084db3b3e03242351))
+* **ci:** fix syntax error in deploy.yml ([6c35683](https://github.com/CidQueiroz/SenseiDB/commit/6c35683e051b43c459d72a3d75f754437c334b36))
+
 ## [5.1.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.0...v5.1.1) (2026-04-03)
 
 
