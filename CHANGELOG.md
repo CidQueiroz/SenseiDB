@@ -1,3 +1,10 @@
+## [5.1.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.0...v5.1.1) (2026-04-03)
+
+
+### Bug Fixes
+
+* **ci:** trigger deploy v5.1.1 (manual re-run) ([09331fe](https://github.com/CidQueiroz/SenseiDB/commit/09331fe54f65f55c39dbdedc3679b7b751287017))
+
 # [5.1.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.0.3...v5.1.0) (2026-04-03)
 
 
