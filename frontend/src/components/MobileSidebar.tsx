@@ -39,9 +39,15 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, toggleSidebar, to
         <button onClick={toggleSidebar} className="close-btn">&times;</button>
       </div>
       <div className="mobile-sidebar-content">
-        <div className="new-chat-btn" onClick={() => { /* clearChat(); toggleSidebar(); */ }}>
+        <div className="new-chat-btn" onClick={() => { clearChat(); toggleSidebar(); }}>
           + Novo Chat
         </div>
+        
+        {/* Usando as props para evitar erro de TS6133 */}
+        <div className="sidebar-actions-mobile">
+           <button onClick={toggleApiModal} className="mobile-action-btn">Configurar API</button>
+        </div>
+
         <div className="conversations-list">
           {conversations.map((conv) => (
             <div key={conv.id} className="conversation-item">
