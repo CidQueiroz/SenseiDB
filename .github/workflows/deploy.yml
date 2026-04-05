@@ -111,6 +111,15 @@ jobs:
           path: cdkteck-ui
           token: ${{ secrets.GH_PACKAGES_TOKEN }}
 
+      # ---------------------------------------------------------
+      # 🚀 PASSO NOVO: Compilar o pacote UI antes do Frontend!
+      # ---------------------------------------------------------
+      - name: Install and Build cdkteck-ui
+        run: |
+          npm install
+          npm run build
+        working-directory: ./cdkteck-ui
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
