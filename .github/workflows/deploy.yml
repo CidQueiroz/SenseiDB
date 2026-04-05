@@ -128,7 +128,9 @@ jobs:
           echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}" >> ./frontend/.npmrc
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install ../cdkteck-ui
         working-directory: ./frontend
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
