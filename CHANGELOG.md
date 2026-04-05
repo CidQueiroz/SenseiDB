@@ -1,3 +1,10 @@
+## [5.1.3](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.2...v5.1.3) (2026-04-03)
+
+
+### Bug Fixes
+
+* **ci:** add frontend/package-lock.json for npm ci ([5aad8e5](https://github.com/CidQueiroz/SenseiDB/commit/5aad8e580fcbc9b6603de4e7ac37427e57c2bb62))
+
 ## [5.1.2](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.1...v5.1.2) (2026-04-03)
 
 
