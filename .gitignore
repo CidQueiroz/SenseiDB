@@ -71,3 +71,4 @@ backend/diag_*.py
 backend/check_*.py
 backend/installed_packages.txt
 estrutura_do_projeto.txt
+private_key.json

@@ -1,7 +1,7 @@
 {
   "hosting": {
     "target": "senseidb",
-    "public": "frontend",
+    "public": "frontend/dist",
     "ignore": [
       "firebase.json",
       "**/.*",
