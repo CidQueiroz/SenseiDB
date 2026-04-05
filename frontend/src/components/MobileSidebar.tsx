@@ -8,9 +8,11 @@ import '../style_sensei.css';
 interface MobileSidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
+  toggleApiModal: () => void;
+  clearChat: () => void;
 }
 
-const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, toggleSidebar }) => {
+const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, toggleSidebar, toggleApiModal, clearChat }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const [conversations, setConversations] = useState<any[]>([]);
