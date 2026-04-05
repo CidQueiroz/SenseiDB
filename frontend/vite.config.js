@@ -19,6 +19,7 @@ export default defineConfig({
     exclude: ['@cidqueiroz/cdkteck-ui']
   },
   resolve: {
-    preserveSymlinks: true 
+    preserveSymlinks: true,
+    dedupe: ['react', 'react-dom', 'react-router-dom']
   }
 });
