@@ -157,4 +157,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SENSEIDB_AGENT }}'
           channelId: live
           projectId: senseidb-agent
-          entryPoint: ./senseidb/frontend
+          entryPoint: ./senseidb
