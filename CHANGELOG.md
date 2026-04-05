@@ -1,3 +1,10 @@
+## [5.2.4](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.3...v5.2.4) (2026-04-05)
+
+
+### Bug Fixes
+
+* update hosting target in firebase.json to senseidb-agent ([42a702f](https://github.com/CidQueiroz/SenseiDB/commit/42a702fd3fab2b7509d3a0d4b00e0c8265dbd515))
+
 ## [5.2.3](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.2...v5.2.3) (2026-04-05)
 
 
