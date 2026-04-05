@@ -1,3 +1,10 @@
+## [5.2.8](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.7...v5.2.8) (2026-04-05)
+
+
+### Bug Fixes
+
+* **frontend:** unifica instâncias do react-router-dom no vite config ([ba81ffc](https://github.com/CidQueiroz/SenseiDB/commit/ba81ffc30f90ab3ff3f2a8516dd9e9500b9e2aa7))
+
 ## [5.2.7](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.6...v5.2.7) (2026-04-05)
 
 
