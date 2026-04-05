@@ -1,3 +1,10 @@
+## [5.1.5](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.4...v5.1.5) (2026-04-05)
+
+
+### Bug Fixes
+
+* update MobileSidebar component to include missing props for API modal and chat clearing ([2fab1c0](https://github.com/CidQueiroz/SenseiDB/commit/2fab1c0be3fac971ac862733730a4f7a5369a615))
+
 ## [5.1.4](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.3...v5.1.4) (2026-04-05)
 
 
