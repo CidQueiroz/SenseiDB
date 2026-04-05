@@ -1,3 +1,10 @@
+## [5.2.3](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.2...v5.2.3) (2026-04-05)
+
+
+### Bug Fixes
+
+* update projectId in deploy.yml to use environment variable ([a2ee122](https://github.com/CidQueiroz/SenseiDB/commit/a2ee12281cb7864fcf4188dd192bf5e7e18f807f))
+
 ## [5.2.2](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.1...v5.2.2) (2026-04-05)
 
 
