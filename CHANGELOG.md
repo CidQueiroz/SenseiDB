@@ -1,3 +1,10 @@
+## [5.2.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.0...v5.2.1) (2026-04-05)
+
+
+### Bug Fixes
+
+* update .gitignore to exclude private_key.json and correct firebase public path ([a74abb7](https://github.com/CidQueiroz/SenseiDB/commit/a74abb7bec62d95f26250e397a2261c1faa5b453))
+
 # [5.2.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.6...v5.2.0) (2026-04-05)
 
 
