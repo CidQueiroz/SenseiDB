@@ -1,3 +1,10 @@
+## [5.1.6](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.5...v5.1.6) (2026-04-05)
+
+
+### Bug Fixes
+
+* restore clearChat and toggleSidebar functionality in new chat button ([d77658c](https://github.com/CidQueiroz/SenseiDB/commit/d77658c74ff8f119cf846e0821d8e3b9f51a8aea))
+
 ## [5.1.5](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.4...v5.1.5) (2026-04-05)
 
 
