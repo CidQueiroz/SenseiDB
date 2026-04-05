@@ -1,3 +1,10 @@
+## [5.2.2](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.1...v5.2.2) (2026-04-05)
+
+
+### Bug Fixes
+
+* update entryPoint in deploy.yml for frontend deployment ([e78ca43](https://github.com/CidQueiroz/SenseiDB/commit/e78ca43cea4e30d0e26e947bcd277bde5f634ae1))
+
 ## [5.2.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.0...v5.2.1) (2026-04-05)
 
 
