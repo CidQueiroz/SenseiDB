@@ -1,3 +1,10 @@
+## [5.2.6](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.5...v5.2.6) (2026-04-05)
+
+
+### Bug Fixes
+
+* **deploy:** altera checkout path do cdkteck-ui de ../ para ./ para resolver erro do actions ([d098f67](https://github.com/CidQueiroz/SenseiDB/commit/d098f672dc30f18472302116344915f0b6438167))
+
 ## [5.2.5](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.4...v5.2.5) (2026-04-05)
 
 
