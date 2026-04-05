@@ -1,3 +1,10 @@
+## [5.1.4](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.3...v5.1.4) (2026-04-05)
+
+
+### Bug Fixes
+
+* update MobileSidebar component to simplify props and enhance conversation fetching ([b5f222b](https://github.com/CidQueiroz/SenseiDB/commit/b5f222b78ad43d19f4ff41bf256b823088b61b90))
+
 ## [5.1.3](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.2...v5.1.3) (2026-04-03)
 
 
