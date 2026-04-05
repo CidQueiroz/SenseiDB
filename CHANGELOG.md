@@ -1,3 +1,10 @@
+# [5.2.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.6...v5.2.0) (2026-04-05)
+
+
+### Features
+
+* add step to install and build cdkteck-ui before frontend deployment ([c4c5fb1](https://github.com/CidQueiroz/SenseiDB/commit/c4c5fb1913ce64ad694ec237dcda6ee36433a7db))
+
 ## [5.1.6](https://github.com/CidQueiroz/SenseiDB/compare/v5.1.5...v5.1.6) (2026-04-05)
 
 
