@@ -93,54 +93,49 @@ jobs:
     steps:
       - name: Checkout SenseiDB
         uses: actions/checkout@v3
-        with:
-          path: senseidb
 
       - name: Restore cdkteck-ui Cache
         id: cache-ui
         uses: actions/cache@v3
         with:
-          path: cdkteck-ui
-          key: ${{ runner.os }}-cdkteck-ui-${{ hashFiles('senseidb/frontend/package.json') }}
+          path: ../cdkteck-ui
+          key: ${{ runner.os }}-cdkteck-ui-${{ hashFiles('frontend/package.json') }}
 
       - name: Checkout cdkteck-ui (Mirroring local environment)
         if: steps.cache-ui.outputs.cache-hit != 'true'
         uses: actions/checkout@v3
         with:
           repository: cidqueiroz/cdkteck-ui
-          path: cdkteck-ui
+          path: ../cdkteck-ui
           token: ${{ secrets.GH_PACKAGES_TOKEN }}
 
-      # ---------------------------------------------------------
-      # 🚀 PASSO NOVO: Compilar o pacote UI antes do Frontend!
-      # ---------------------------------------------------------
       - name: Install and Build cdkteck-ui
         run: |
           npm install
           npm run build
-        working-directory: ./cdkteck-ui
+        working-directory: ../cdkteck-ui
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: './senseidb/frontend/package-lock.json'
+          cache-dependency-path: './frontend/package-lock.json'
 
       - name: Configure NPM for GitHub Packages
         run: |
-          echo "@cidqueiroz:registry=https://npm.pkg.github.com" > ./senseidb/frontend/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}" >> ./senseidb/frontend/.npmrc
+          echo "@cidqueiroz:registry=https://npm.pkg.github.com" > ./frontend/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GH_PACKAGES_TOKEN }}" >> ./frontend/.npmrc
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./senseidb/frontend
+        working-directory: ./frontend
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       - name: Build Frontend
         run: npm run build
-        working-directory: ./senseidb/frontend
+        working-directory: ./frontend
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
@@ -157,4 +152,4 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SENSEIDB_AGENT }}'
           channelId: live
           projectId: ${{ env.PROJECT_ID }}
-          entryPoint: ./senseidb
+          entryPoint: .
