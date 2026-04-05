@@ -1,3 +1,10 @@
+## [5.2.5](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.4...v5.2.5) (2026-04-05)
+
+
+### Bug Fixes
+
+* **deploy:** corrige regras de rewrite do hosting e entryPoint da pipeline ([6e87d5f](https://github.com/CidQueiroz/SenseiDB/commit/6e87d5fd2c114c7592ad1c24bbe6a20b09fabe9c))
+
 ## [5.2.4](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.3...v5.2.4) (2026-04-05)
 
 
