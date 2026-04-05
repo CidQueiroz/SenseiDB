@@ -1,3 +1,10 @@
+## [5.2.7](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.6...v5.2.7) (2026-04-05)
+
+
+### Bug Fixes
+
+* **deploy:** instala dependência local do cdkteck-ui no frontend para carregar tipagens ([c82f106](https://github.com/CidQueiroz/SenseiDB/commit/c82f106fd0c5060fdad2f2c8cc5cc8704dca41b3))
+
 ## [5.2.6](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.5...v5.2.6) (2026-04-05)
 
 
