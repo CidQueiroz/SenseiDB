@@ -1,0 +1,37 @@
+name: Deploy Frontend to Firebase Hosting (Production)
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
+
+jobs:
+  build_and_deploy_production:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout SenseiDB Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: 2. Download Build Artifact from Release Workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: frontend/dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 3. Verify build output
+        run: |
+          echo "Verificando dist..."
+          ls -la frontend/dist/
+          
+      - name: 4. Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: 5. Deploy to Firebase Production
+        run: firebase deploy --only hosting:senseidb-agent --project cdkteck-hub --token "${{ secrets.FIREBASE_TOKEN }}"
+        working-directory: . # Deploy runs relative to the root

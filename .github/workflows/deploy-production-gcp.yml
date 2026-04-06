@@ -1,0 +1,54 @@
+name: Deploy Backend to GCP (Production)
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  SERVICE_NAME: senseidb
+  REGION: southamerica-east1
+
+jobs:
+  deploy_gcp:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: 2. Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: 3. Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: 4. Configure Docker
+        run: gcloud auth configure-docker ${REGION}-docker.pkg.dev
+
+      - name: 5. Build and push Docker image
+        run: |
+          docker build --no-cache -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${SERVICE_NAME}-repo/${SERVICE_NAME}:${{ github.sha }} ./backend
+          docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${SERVICE_NAME}-repo/${SERVICE_NAME}:${{ github.sha }}
+
+      - name: 6. Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${SERVICE_NAME} \
+            --image=${REGION}-docker.pkg.dev/${PROJECT_ID}/${SERVICE_NAME}-repo/${SERVICE_NAME}:${{ github.sha }} \
+            --region=${REGION} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }},GEMINI_API_KEY_1=${{ secrets.GEMINI_API_KEY_1 }},GEMINI_API_KEY_2=${{ secrets.GEMINI_API_KEY_2 }},GEMINI_API_KEY_3=${{ secrets.GEMINI_API_KEY_3 }},GEMINI_API_KEY_4=${{ secrets.GEMINI_API_KEY_4 }},GEMINI_API_KEY_5=${{ secrets.GEMINI_API_KEY_5 }},GEMINI_API_KEY_6=${{ secrets.GEMINI_API_KEY_6 }},GEMINI_API_KEY_7=${{ secrets.GEMINI_API_KEY_7 }},GEMINI_API_KEY_8=${{ secrets.GEMINI_API_KEY_8 }},GEMINI_API_KEY_9=${{ secrets.GEMINI_API_KEY_9 }},GEMINI_API_KEY_10=${{ secrets.GEMINI_API_KEY_10 }}" \
+            --service-account=${{ secrets.GCP_SA_EMAIL }}

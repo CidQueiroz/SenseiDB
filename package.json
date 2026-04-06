@@ -1,7 +1,10 @@
 {
   "name": "senseidb",
   "version": "1.0.0",
-  "description": "> Seu Mentor Estratégico Pessoal com IA",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
   "main": "index.js",
   "directories": {
     "doc": "docs",
