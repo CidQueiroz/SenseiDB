@@ -88,6 +88,7 @@ def chat_endpoint(request):
         user_id = str(request.user.username) # Firebase UID is stored as username
 
         query = request.data.get('query')
+        role = request.data.get('role', 'mentor') # Get role from request, default to mentor
         preferred_provider = request.data.get('provider') # Get preferred provider from request
 
         if not query:
@@ -105,7 +106,8 @@ def chat_endpoint(request):
             query, 
             groq_api_key, 
             google_api_key, 
-            preferred_provider=preferred_provider
+            preferred_provider=preferred_provider,
+            role=role # Pass the role to the processing function
         )
         
         return Response(resultado, status=status.HTTP_200_OK)
@@ -170,3 +172,22 @@ def health_check(request):
         {"status": "healthy", "service": "SenseiDB Backend"},
         status=status.HTTP_200_OK
     )
+
+
+class PersonaListView(APIView):
+    """
+    Endpoint para listar as personas disponíveis no sistema
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            personas_dir = os.path.join(os.path.dirname(__file__), 'personas')
+            if not os.path.exists(personas_dir):
+                return Response([], status=status.HTTP_200_OK)
+            
+            # Lista arquivos .txt na pasta personas
+            files = [f.replace('.txt', '') for f in os.listdir(personas_dir) if f.endswith('.txt')]
+            return Response(sorted(files), status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"erro": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

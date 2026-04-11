@@ -7,5 +7,6 @@ urlpatterns = [
     path('contextos/', views.ContextListView.as_view(), name='context_list'), # New
     path('health/', views.health_check, name='health'),
     path('contexto/check/<str:user_id>/', views.check_user_contexts, name='check_contexts'),
-    path('api-keys/', views.UserApiKeysView.as_view(), name='user_api_keys'), # New
+    path('api-keys/', views.UserApiKeysView.as_view(), name='user_api_keys'),
+    path('personas/', views.PersonaListView.as_view(), name='persona_list'),
 ]

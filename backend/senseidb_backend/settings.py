@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '0so3xj%(coh%y0ficnu%rx0_5du$&re2ql=s=zpg9#0ia+ntje')
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -56,24 +56,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'senseidb_backend.wsgi.application'
 
-# CORS Settings
-# DEVELOPMENT ONLY: Allow all origins to diagnose CORS issues.
-# CORS_ALLOW_ALL_ORIGINS = True
+# CORS Settings (Modo Nuclear para Diagnóstico)
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOWED_ORIGINS = [
-    # Ambiente de Desenvolvimento
-    "http://127.0.0.1:5500",
-    "http://localhost:5500",
-    "http://localhost:3000", # Adicionado para permitir o frontend React em desenvolvimento
-    # Domínios de Produção
-    "https://cdkteck-hub.web.app",
-    "https://cdkteck-hub.firebaseapp.com",
-    "https://sensei.cdkteck.com.br",
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://sensei.cdkteck.com.br",
-]
+# Security Settings for Cloud Run (Proxy)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False # Evita redirecionamentos duplos que quebram o preflight CORS
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
 
 # Database (SQLite para desenvolvimento, Cloud SQL para produção)
 DATABASES = {

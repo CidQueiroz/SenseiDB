@@ -7,17 +7,44 @@ import { api } from '../api'; // Import your API instance
 interface SidebarProps {
   toggleApiModal: () => void;
   clearChat: () => void;
-  isCollapsed: boolean; // New prop
-  toggleCollapsed: () => void; // New prop
+  isCollapsed: boolean;
+  toggleCollapsed: () => void;
+  selectedPersona: string;
+  setSelectedPersona: (role: string) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ toggleApiModal, clearChat, isCollapsed, toggleCollapsed }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  toggleApiModal,
+  clearChat,
+  isCollapsed,
+  toggleCollapsed,
+  selectedPersona,
+  setSelectedPersona
+}) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme(); // Use the theme context
   const [newContext, setNewContext] = useState('');
   const [savingContext, setSavingContext] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSynced, setIsSynced] = useState<boolean | null>(null);
+  const [availablePersonas, setAvailablePersonas] = useState<string[]>([]);
+  const [localPersona, setLocalPersona] = useState(selectedPersona);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setLocalPersona(selectedPersona);
+  }, [selectedPersona]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const checkSync = async () => {
@@ -31,7 +58,24 @@ const Sidebar: React.FC<SidebarProps> = ({ toggleApiModal, clearChat, isCollapse
         }
       }
     };
+    const fetchPersonas = async () => {
+      try {
+        const response = await api.get('/personas/');
+        if (response.data && response.data.length > 0) {
+          setAvailablePersonas(response.data);
+        } else {
+          // Fallback se a API retornar vazio
+          setAvailablePersonas(['mentor_sensei', 'professor', 'nutricionista', 'atendente']);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar personas:', error);
+        // Fallback em caso de erro de conexão
+        setAvailablePersonas(['mentor_sensei', 'professor', 'nutricionista', 'atendente']);
+      }
+    };
+
     checkSync();
+    fetchPersonas();
   }, [user]);
 
   const handleSaveContext = async () => {
@@ -51,20 +95,29 @@ const Sidebar: React.FC<SidebarProps> = ({ toggleApiModal, clearChat, isCollapse
     }
   };
 
-  const logoImage = theme === 'dark' 
-  ? '/assets/logo_header.png' 
-  : '/assets/logo_header.png';
+  const handleValidatePersona = (personaToValidate?: string) => {
+    const valueToSet = (personaToValidate || localPersona).trim();
+    if (!valueToSet) return;
+    setSelectedPersona(valueToSet);
+    setIsDropdownOpen(false);
+    // Removemos o alert para uma experiência mais fluida, como solicitado
+    console.log(`🚀 Persona alterada para: ${valueToSet}`);
+  };
+
+  const logoImage = theme === 'dark'
+    ? '/assets/logo_header.png'
+    : '/assets/logo_header.png';
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Header */}
       <div className="sidebar-header">
         <div className="cabecalho-logo">
-          <img 
-            src={logoImage} 
+          <img
+            src={logoImage}
             alt="CDK TECK Logo"
-            width={40} 
-            height={40} 
+            width={40}
+            height={40}
           />
         </div>
         {!isCollapsed && (
@@ -113,14 +166,74 @@ const Sidebar: React.FC<SidebarProps> = ({ toggleApiModal, clearChat, isCollapse
           style={{ display: isCollapsed ? 'none' : 'block' }}
         ></textarea>
         {saveError && !isCollapsed && <p style={{ color: 'red', fontSize: '0.8rem', marginTop: '5px' }}>{saveError}</p>}
+
+        <div className="sidebar-buttons">
+          <button className="sidebar-btn btn-save" onClick={handleSaveContext} disabled={savingContext}>
+            <i className="fas fa-save"></i>
+            {!isCollapsed && <span>{savingContext ? 'Salvando...' : 'Salvar Inteligência'}</span>}
+          </button>
+        </div>
+
+      </div>
+
+      {/* Persona Section (Searchable Dropdown) */}
+      <div className="persona-section" ref={dropdownRef}>
+        {!isCollapsed && <div className="persona-label">Persona (Papel)</div>}
+        {!isCollapsed && (
+          <div className="persona-select-container">
+            <div className={`persona-input-group ${isDropdownOpen ? 'active' : ''}`}>
+              <input
+                type="text"
+                className="persona-input-line"
+                placeholder="Busque um papel..."
+                value={localPersona}
+                onChange={(e) => {
+                  setLocalPersona(e.target.value);
+                  setIsDropdownOpen(true);
+                }}
+                onFocus={() => setIsDropdownOpen(true)}
+                onKeyPress={(e) => e.key === 'Enter' && handleValidatePersona()}
+              />
+              <button 
+                className="persona-dropdown-toggle" 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                title="Ver todas as personas"
+              >
+                <i className={`fas fa-chevron-${isDropdownOpen ? 'up' : 'down'}`}></i>
+              </button>
+            </div>
+
+            {isDropdownOpen && (
+              <ul className="persona-dropdown-list">
+                {availablePersonas
+                  .filter(p => !localPersona || p.toLowerCase().includes(localPersona.toLowerCase()))
+                  .map((p, idx) => (
+                    <li 
+                      key={idx} 
+                      className="persona-option" 
+                      onClick={() => {
+                        setLocalPersona(p);
+                        handleValidatePersona(p);
+                      }}
+                    >
+                      {p}
+                    </li>
+                  ))}
+                {availablePersonas.filter(p => !localPersona || p.toLowerCase().includes(localPersona.toLowerCase())).length === 0 && (
+                  <li className="persona-option disabled">Nenhuma persona encontrada</li>
+                )}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Buttons */}
       <div className="sidebar-buttons">
-        <button className="sidebar-btn btn-save" onClick={handleSaveContext} disabled={savingContext}>
+        {/* <button className="sidebar-btn btn-save" onClick={handleSaveContext} disabled={savingContext}>
           <i className="fas fa-save"></i>
           {!isCollapsed && <span>{savingContext ? 'Salvando...' : 'Salvar Inteligência'}</span>}
-        </button>
+        </button> */}
 
         <button className="sidebar-btn btn-config" onClick={toggleApiModal}>
           <i className="fas fa-cog"></i>

@@ -24,15 +24,16 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
 
   const [showUniversoDropdown, setShowUniversoDropdown] = useState(false);
   const [showSobreDropdown, setShowSobreDropdown] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // New state for sidebar collapse
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState<string>(localStorage.getItem('selected_persona') || 'mentor_sensei');
 
   const toggleApiModal = () => setIsApiModalOpen(!isApiModalOpen);
   const toggleTutorialOverlay = () => setIsTutorialOverlayOpen(!isTutorialOverlayOpen);
   const clearChatMessages = () => setMessages([]);
   const toggleSidebarCollapsed = () => setIsSidebarCollapsed(!isSidebarCollapsed); // New toggle function
 
-  const addMessage = (content: string, role: 'user' | 'assistant', aiUsed?: string, numContextos?: number) => {
-    setMessages((prevMessages) => [...prevMessages, { content, role, aiUsed, numContextos }]);
+  const addMessage = (content: string, role: 'user' | 'assistant', aiUsed?: string, numContextos?: number, persona?: string) => {
+    setMessages((prevMessages) => [...prevMessages, { content, role, aiUsed, numContextos, persona }]);
   };
 
   const scrollToBottom = () => {
@@ -57,11 +58,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
 
       const response = await api.post('/chat/', { 
         query: userMessage,
-        provider: preferredProvider 
+        provider: preferredProvider,
+        role: selectedPersona
       });
       
       const { resposta, ia_usada, num_contextos } = response.data;
-      addMessage(resposta, 'assistant', ia_usada, num_contextos);
+      addMessage(resposta, 'assistant', ia_usada, num_contextos, selectedPersona);
     } catch (error: any) {
       console.error('Error sending message to backend:', error);
       let errorMessage = 'O Sensei está pensando muito forte, tente simplificar a pergunta ou verifique sua conexão.';
@@ -121,8 +123,13 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
       <Sidebar 
         toggleApiModal={toggleApiModal} 
         clearChat={clearChatMessages} 
-        isCollapsed={isSidebarCollapsed} // Pass the collapsed state
-        toggleCollapsed={toggleSidebarCollapsed} // Pass the toggle function
+        isCollapsed={isSidebarCollapsed}
+        toggleCollapsed={toggleSidebarCollapsed}
+        selectedPersona={selectedPersona}
+        setSelectedPersona={(role) => {
+          setSelectedPersona(role);
+          localStorage.setItem('selected_persona', role);
+        }}
       />
 
       <div className="chat-main-content">
@@ -243,7 +250,11 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
               />
               {isLoading && (
                 <div className="message assistant">
-                  <div className="message-avatar">🧠</div>
+                  <div className="message-avatar">
+                    {selectedPersona === 'professor' ? '🎓' : 
+                     selectedPersona === 'nutricionista' ? '🍎' :
+                     selectedPersona === 'atendente' ? '🎧' : '🧠'}
+                  </div>
                   <div className="message-bubble">
                     <div className="typing-indicator">
                       <div className="typing-dot"></div>
@@ -285,6 +296,11 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
         toggleSidebar={toggleMobileSidebar}
         toggleApiModal={toggleApiModal}
         clearChat={clearChatMessages}
+        selectedPersona={selectedPersona}
+        setSelectedPersona={(role) => {
+          setSelectedPersona(role);
+          localStorage.setItem('selected_persona', role);
+        }}
       />
       {isMobileSidebarOpen && (
         <div className="mobile-sidebar-overlay" onClick={toggleMobileSidebar}></div>

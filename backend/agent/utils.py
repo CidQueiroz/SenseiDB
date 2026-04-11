@@ -75,38 +75,30 @@ print(ADMIN_USER_ID)
 # ============================================ 
 # PROMPT SYSTEM
 # ============================================ 
-def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
-    # --- DEBUG LOG START ---
-    print(f"\n[DEBUG RAG] === INICIO GERACAO PROMPT ===", file=sys.stderr)
-    print(f"[DEBUG RAG] User ID recebido: '{user_id}'", file=sys.stderr)
-    # --- DEBUG LOG END ---
+def gerar_prompt_sistema(contextos: List[str], role: str = 'mentor') -> str:
     """
-    Seleciona e carrega a persona correta baseada no usuário,
+    Seleciona e carrega a persona correta baseada no papel (role),
     injetando o contexto do RAG.
-    """   
-    # 1. Lógica de Seleção de Papel
-    if user_id and (user_id.strip() == "sensei@cdkteck.com.br" or user_id.strip() == "w4qlo3Q5v8USDkQwuzCzPKL75Au2"):
-        print(f"[DEBUG RAG] Condição IF atendida: Selecionando RECEPCIONISTA", file=sys.stderr)
-        arquivo_persona = "recepcionista_vitalita.txt"
-    else:
-        print(f"[DEBUG RAG] Condição ELSE (Padrão): Selecionando MENTOR", file=sys.stderr)
-        arquivo_persona = "mentor_sensei.txt"
+    """
+    # 1. Mapeamento de Papéis para Arquivos
+    mapa_personas = {
+        'mentor': 'mentor_sensei.txt',
+        'professor': 'professor.txt',
+        'atendente': 'atendente.txt',
+        'nutricionista': 'nutricionista.txt'
+    }
+
+    arquivo_persona = mapa_personas.get(role.lower(), 'mentor_sensei.txt')
 
     # 2. Carregamento do Texto
     prompt_base = carregar_persona(arquivo_persona)
-
-    # --- DEBUG LOG CONTENT ---
-    print(f"[DEBUG RAG] Arquivo carregado: {arquivo_persona}", file=sys.stderr)
-    print(f"[DEBUG RAG] Primeiros 200 chars do prompt carregado:\n{prompt_base[:200]}", file=sys.stderr)
-    print(f"[DEBUG RAG] =================================\n", file=sys.stderr)
-    # --- DEBUG LOG END ---
 
     # 3. Injeção de Contexto (RAG)
     if contextos:
         contexto_formatado = "\n".join([f"• {ctx}" for ctx in contextos])
         prompt_final = f"""{prompt_base}
 
-**CONTEXTO RELEVANTE (RAG):**
+**CONTEXTO DOS DADOS DO USUÁRIO:**
 {contexto_formatado}"""
     else:
         prompt_final = prompt_base
@@ -117,42 +109,56 @@ def gerar_prompt_sistema(contextos: List[str], user_id: str = None) -> str:
 # ============================================ 
 # FUNÇÕES DE EMBEDDING E BUSCA
 # ============================================ 
-def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5) -> List[str]:
+def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5, role: str = None) -> List[str]:
     """
-    Busca contextos mais relevantes usando embeddings
+    Busca contextos em fluxo duplo: 
+    1. Privado (Usuário - inteligência_critica)
+    2. Global (Papel - global_knowledge)
     """
     try:
         db = init_firebase()
         api_key = os.environ.get('GOOGLE_API_KEY')
         if not api_key:
-            print("❌ GOOGLE_API_KEY não encontrada para embeddings")
+            print("❌ GOOGLE_API_KEY não encontrada")
             return []
         
+        # Gera o embedding da busca
+        search_query = f"Contexto para {role}: {query}" if role else query
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
-        payload = {"model": "models/gemini-embedding-001", "content": {"parts": [{"text": query}]}}
+        payload = {"model": "models/gemini-embedding-001", "content": {"parts": [{"text": search_query}]}}
         response = requests.post(url, json=payload, timeout=30)
-        
-        if response.status_code != 200:
-            print(f"❌ Erro na API de embedding: {response.status_code} - {response.text}")
-            return []
-        
+        response.raise_for_status()
         query_embedding = response.json()['embedding']['values']
-        docs = db.collection('users').document(user_id).collection('inteligencia_critica').stream()
         
         contexts = []
-        for doc in docs:
-            doc_data = doc.to_dict()
-            if 'embedding' in doc_data and 'contexto' in doc_data:
-                doc_embedding = doc_data['embedding']
-                similarity = np.dot(query_embedding, doc_embedding) / (np.linalg.norm(query_embedding) * np.linalg.norm(doc_embedding))
-                contexts.append({'texto': doc_data['contexto'], 'similarity': similarity})
-        
+
+        # STREAM A: Privado (User)
+        print(f"📡 Buscando Stream Privado (User: {user_id})")
+        user_docs = db.collection('users').document(user_id).collection('inteligencia_critica').stream()
+        for doc in user_docs:
+            data = doc.to_dict()
+            if 'embedding' in data and 'contexto' in data:
+                similarity = np.dot(query_embedding, data['embedding']) / (np.linalg.norm(query_embedding) * np.linalg.norm(data['embedding']))
+                contexts.append({'texto': data['contexto'], 'similarity': similarity, 'source': 'private'})
+
+        # STREAM B: Global (Role)
+        if role:
+            print(f"🌍 Buscando Stream Global (Role: {role})")
+            global_docs = db.collection('global_knowledge').document(role.lower()).collection('concepts').stream()
+            for doc in global_docs:
+                data = doc.to_dict()
+                if 'embedding' in data and 'content' in data:
+                    similarity = np.dot(query_embedding, data['embedding']) / (np.linalg.norm(query_embedding) * np.linalg.norm(data['embedding']))
+                    contexts.append({'texto': data['content'], 'similarity': similarity, 'source': 'global'})
+
         if contexts:
+            # Ordena por similaridade e pega os top_k
             contexts.sort(key=lambda x: x['similarity'], reverse=True)
             return [ctx['texto'] for ctx in contexts[:top_k]]
+        
         return []
     except Exception as e:
-        print(f"❌ Erro ao buscar contextos: {e}")
+        print(f"❌ Erro no Dual-Stream RAG: {e}")
         return []
 
 
@@ -361,22 +367,23 @@ def processar_query_usuario(
     query: str, 
     groq_api_key: Optional[str] = None,
     google_api_key: Optional[str] = None,
-    preferred_provider: Optional[str] = None
+    preferred_provider: Optional[str] = None,
+    role: str = 'mentor'
 ) -> Dict[str, any]:
     """
     Processa a query do usuário com RAG e IA, com sistema de rotação de chaves.
     """ 
     try:
-        print(f"🔍 Buscando contextos para user_id: {user_id}")
-        contextos_relevantes = buscar_contextos_relevantes(user_id, query, top_k=5)
+        print(f"🔍 Buscando contextos para user_id: {user_id} com papel: {role}")
+        contextos_relevantes = buscar_contextos_relevantes(user_id, query, top_k=5, role=role)
         
         if contextos_relevantes:
             print(f"✅ {len(contextos_relevantes)} contextos encontrados")
         else:
             print("⚠️ Nenhum contexto encontrado")
         
-        prompt_sistema = gerar_prompt_sistema(contextos_relevantes, user_id)
-        prompt_final = f"""{prompt_sistema}\n\n---\n**PERGUNTA/MENSAGEM DO USUÁRIO:**\n{query}\n\n---\n\n**INSTRUÇÕES FINAIS:**\n- Responda em português do Brasil\n- Seja conciso mas completo\n- Use markdown para formatação (negrito, listas, etc)\n- Termine com uma pergunta reflexiva ou próximo passo claro"""
+        prompt_sistema = gerar_prompt_sistema(contextos_relevantes, role)
+        prompt_final = f"""{prompt_sistema}\n\n---\n**MENSAGEM DO USUÁRIO:**\n{query}\n\n---\n\n**INSTRUÇÕES:**\n- Responda de forma natural e conversacional em português do Brasil.\n- Não use estruturas rígidas ou listas obrigatórias.\n- Integre as informações do contexto organicamente na resposta."""
         
         resposta_ia = None
         erro = None
