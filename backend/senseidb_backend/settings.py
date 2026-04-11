@@ -60,6 +60,10 @@ WSGI_APPLICATION = 'senseidb_backend.wsgi.application'
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://senseidb.cdkteck.com.br',
+]
+
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
