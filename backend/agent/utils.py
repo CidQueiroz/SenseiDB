@@ -132,6 +132,55 @@ def gerar_prompt_sistema(contextos: List[str], role: str = 'mentor') -> str:
 # ============================================ 
 # FUNÇÕES DE EMBEDDING E BUSCA
 # ============================================ 
+def gerar_embedding_google(texto: str) -> List[float]:
+    """
+    Gera embedding usando Google AI com rotação de chaves.
+    Tenta a chave principal (GOOGLE_API_KEY) e depois as do proprietário (1 a 10).
+    """
+    keys_to_try = []
+    
+    # 1. Tenta a chave principal do ambiente
+    main_key = os.environ.get('GOOGLE_API_KEY')
+    if main_key:
+        keys_to_try.append(main_key)
+        
+    # 2. Adiciona as chaves de rotação do proprietário
+    keys_to_try.extend(get_owner_google_keys())
+    
+    if not keys_to_try:
+        raise InvalidGoogleApiKey("Nenhuma chave Google API encontrada para gerar embeddings.")
+
+    last_error = None
+    for i, api_key in enumerate(keys_to_try):
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
+            payload = {"model": "models/gemini-embedding-001", "content": {"parts": [{"text": texto}]}}
+            
+            # print(f"🧠 Tentando gerar embedding com chave {i+1}...")
+            response = requests.post(url, json=payload, timeout=20)
+            
+            if response.status_code == 200:
+                print(f"✅ Embedding gerado com sucesso (Chave {i+1}).")
+                return response.json()['embedding']['values']
+            
+            error_data = response.text
+            if response.status_code == 429:
+                print(f"⚠️ Chave {i+1} atingiu cota (429). Tentando próxima...")
+                last_error = f"Quota Excedida: {error_data}"
+            elif "API key not valid" in error_data:
+                print(f"❌ Chave {i+1} inválida. Tentando próxima...")
+                last_error = f"Chave Inválida: {error_data}"
+            else:
+                print(f"❓ Erro inesperado na chave {i+1} ({response.status_code}): {error_data}")
+                last_error = f"Erro {response.status_code}: {error_data}"
+                
+        except Exception as e:
+            print(f"⚠️ Erro ao tentar chave {i+1}: {e}")
+            last_error = str(e)
+
+    raise Exception(f"Falha total ao gerar embedding após tentar {len(keys_to_try)} chaves. Último erro: {last_error}")
+
+
 def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5, role: str = None) -> List[str]:
     """
     Busca contextos em fluxo duplo: 
@@ -140,25 +189,16 @@ def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5, role: 
     """
     try:
         db = init_firebase()
-        api_key = os.environ.get('GOOGLE_API_KEY')
-        if not api_key:
-            print("❌ GOOGLE_API_KEY não encontrada")
-            return []
         
-        # Gera o embedding da busca
+        # Gera o embedding da busca com rotação robusta
         search_query = f"Contexto para {role}: {query}" if role else query
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
-        payload = {"model": "models/gemini-embedding-001", "content": {"parts": [{"text": search_query}]}}
-        
         print(f"🧠 Gerando embedding para busca: {search_query[:50]}...")
-        response = requests.post(url, json=payload, timeout=30)
         
-        if response.status_code != 200:
-             print(f"❌ Erro ao gerar embedding de busca ({response.status_code}): {response.text}")
-             return []
-             
-        query_embedding = response.json()['embedding']['values']
-        print("✅ Embedding de busca gerado.")
+        try:
+            query_embedding = gerar_embedding_google(search_query)
+        except Exception as e:
+            print(f"❌ Abortando RAG: Falha ao gerar embedding de busca: {e}")
+            return []
         
         contexts = []
 
@@ -230,32 +270,13 @@ def salvar_contexto_usuario(user_id: str, contexto_texto: str, google_api_key: O
     try:
         print("\n--- INICIANDO salvar_contexto_usuario ---")
         
-        # Passo 1: Gera o embedding
-        print("LOG: Gerando embedding para o texto...")
-        # Prioriza a chave do usuário, depois a do ambiente para garantir RAG funcional
-        api_key_for_embedding = google_api_key or os.environ.get("GOOGLE_API_KEY")
-        
-        if not api_key_for_embedding:
-            # Tenta buscar das chaves do proprietário se a env GOOGLE_API_KEY não estiver setada
-            owner_keys = get_owner_google_keys()
-            if owner_keys:
-                api_key_for_embedding = owner_keys[0]
-                print("LOG: Usando primeira chave de proprietário para embedding.")
-            else:
-                raise InvalidGoogleApiKey("Nenhuma chave Google disponível para gerar embedding (RAG).")
-        
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key_for_embedding}"
-        payload = {
-            "model": "models/gemini-embedding-001", 
-            "content": {"parts": [{"text": contexto_texto}]}
-        }
-        response = requests.post(url, json=payload, headers={'Content-Type': 'application/json'}, timeout=30)
-        
-        if response.status_code != 200:
-             return False, f"Erro na API de embedding ({response.status_code}): {response.text}"
-             
-        embedding = response.json()['embedding']['values']
-        print("LOG: Embedding gerado com sucesso.")
+        # Passo 1: Gera o embedding com rotação
+        print("LOG: Gerando embedding para o arquivo/contexto...")
+        try:
+            embedding = gerar_embedding_google(contexto_texto)
+            print("LOG: Embedding gerado com sucesso via rotação.")
+        except Exception as e:
+             return False, f"Falha ao gerar embedding após tentar todas as chaves: {e}"
 
         # Passo 2: Salva no Firestore na collection 'inteligencia_critica'
         print("LOG: Inicializando cliente Firebase...")
