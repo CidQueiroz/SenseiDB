@@ -24,13 +24,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@cidqueiroz'
 
-      - name: 3. Set up .npmrc
-        run: echo "//npm.pkg.github.com/:_authToken=\${NODE_AUTH_TOKEN}" >> .npmrc
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
-
-      - name: 4. Install Dependencies
+      - name: 3. Install Dependencies
         run: npm install
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
