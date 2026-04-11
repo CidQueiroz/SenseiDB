@@ -1,3 +1,10 @@
+## [5.5.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.0...v5.5.1) (2026-04-11)
+
+
+### Bug Fixes
+
+* encode Firebase credentials as Base64 in deployment pipeline and add decoding logic in authentication service ([ad83f92](https://github.com/CidQueiroz/SenseiDB/commit/ad83f920da7ebf6451f10d1e9755f2aa95acae8f))
+
 # [5.5.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.4.1...v5.5.0) (2026-04-11)
 
 
