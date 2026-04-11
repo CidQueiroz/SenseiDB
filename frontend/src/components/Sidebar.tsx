@@ -123,7 +123,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {!isCollapsed && (
           <div className="sidebar-title">
             <h1>SenseiDB</h1>
-            <span>v5.5.2 - Mentor IA Adaptativo</span>
+            <span>v5.5.3 - Mentor IA Adaptativo</span>
           </div>
         )}
       </div>

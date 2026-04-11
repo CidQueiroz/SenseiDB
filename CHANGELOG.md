@@ -1,3 +1,10 @@
+## [5.5.3](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.2...v5.5.3) (2026-04-11)
+
+
+### Bug Fixes
+
+* **rag:** implement api key rotation for embeddings & fix coop header ([12eb8fe](https://github.com/CidQueiroz/SenseiDB/commit/12eb8fefb84e7f962495733b4c92f163129a97f4))
+
 ## [5.5.2](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.1...v5.5.2) (2026-04-11)
 
 
