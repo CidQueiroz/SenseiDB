@@ -1,3 +1,10 @@
+# [5.4.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.3.0...v5.4.0) (2026-04-11)
+
+
+### Features
+
+* add senseidb.cdkteck.com.br to CSRF_TRUSTED_ORIGINS settings ([528e002](https://github.com/CidQueiroz/SenseiDB/commit/528e00278a6c36d51fc0b223beafbb7d83692d40))
+
 # [5.3.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.8...v5.3.0) (2026-04-11)
 
 
