@@ -59,6 +59,7 @@ class FirebaseAuthentication(BaseAuthentication):
         try:
             decoded_token = auth.verify_id_token(id_token)
         except Exception as e:
+            print(f"❌ Firebase Auth Error: {e}") # Log detailed error to Cloud Run logs
             raise AuthenticationFailed(f'Invalid Firebase ID token: {e}')
 
         uid = decoded_token.get('uid')

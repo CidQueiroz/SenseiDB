@@ -85,7 +85,7 @@ jobs:
             --region=southamerica-east1 \
             --platform=managed \
             --allow-unauthenticated \
-            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }},GEMINI_API_KEY_1=${{ secrets.GEMINI_API_KEY_1 }},GEMINI_API_KEY_2=${{ secrets.GEMINI_API_KEY_2 }},GEMINI_API_KEY_3=${{ secrets.GEMINI_API_KEY_3 }},GEMINI_API_KEY_4=${{ secrets.GEMINI_API_KEY_4 }},GEMINI_API_KEY_5=${{ secrets.GEMINI_API_KEY_5 }},GEMINI_API_KEY_6=${{ secrets.GEMINI_API_KEY_6 }},GEMINI_API_KEY_7=${{ secrets.GEMINI_API_KEY_7 }},GEMINI_API_KEY_8=${{ secrets.GEMINI_API_KEY_8 }},GEMINI_API_KEY_9=${{ secrets.GEMINI_API_KEY_9 }},GEMINI_API_KEY_10=${{ secrets.GEMINI_API_KEY_10 }}" \
+            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }},GOOGLE_APPLICATION_CREDENTIALS_JSON=${{ secrets.FIREBASE_SERVICE_ACCOUNT_SENSEIDB_AGENT }},GEMINI_API_KEY_1=${{ secrets.GEMINI_API_KEY_1 }},GEMINI_API_KEY_2=${{ secrets.GEMINI_API_KEY_2 }},GEMINI_API_KEY_3=${{ secrets.GEMINI_API_KEY_3 }},GEMINI_API_KEY_4=${{ secrets.GEMINI_API_KEY_4 }},GEMINI_API_KEY_5=${{ secrets.GEMINI_API_KEY_5 }},GEMINI_API_KEY_6=${{ secrets.GEMINI_API_KEY_6 }},GEMINI_API_KEY_7=${{ secrets.GEMINI_API_KEY_7 }},GEMINI_API_KEY_8=${{ secrets.GEMINI_API_KEY_8 }},GEMINI_API_KEY_9=${{ secrets.GEMINI_API_KEY_9 }},GEMINI_API_KEY_10=${{ secrets.GEMINI_API_KEY_10 }}" \
             --service-account=${{ secrets.GCP_SA_EMAIL }}
 
   deploy-frontend:
@@ -112,6 +112,13 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
           VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
       - name: 4. Deploy to Firebase
         run: |
