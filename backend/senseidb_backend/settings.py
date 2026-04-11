@@ -82,8 +82,8 @@ SECURE_SSL_REDIRECT = False # Evita redirecionamentos duplos que quebram o prefl
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
-# Permite que popups do Firebase Auth funcionem (COOP)
-SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+# Permite que popups do Firebase Auth funcionem (COOP) - Downgraded to unsafe-none per user feedback
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'unsafe-none'
 
 # Database (SQLite para desenvolvimento, Cloud SQL para produção)
 DATABASES = {

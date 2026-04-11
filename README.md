@@ -28,18 +28,18 @@ The system is engineered around the RAG pattern to ensure that the AI's response
 
 ```mermaid
 graph TD
-    subgraph "User Interface (React)"
+    subgraph UI_Layer ["User Interface (React)"]
         UI(User Interface)
     end
 
-    subgraph "Backend Services (Django on GCP Cloud Run)"
+    subgraph Backend_Layer ["Backend Services (Django on GCP Cloud Run)"]
         API(API Gateway)
         EmbeddingService(Embedding Service)
         VectorDB[(Vector Database)]
         LLM_Service(LLM Service<br/>Gemini / Groq)
     end
 
-    subgraph "External"
+    subgraph External_Layer ["External"]
         LLM_API(LLM Provider API)
     end
 
@@ -55,7 +55,7 @@ graph TD
 
     style VectorDB fill:#4285F4,stroke:#fff,stroke-width:2px,color:#fff
     style LLM_Service fill:#34A853,stroke:#fff,stroke-width:2px,color:#fff
-    ```
+```
 
 1.  **Query:** A user asks a question through the React frontend.
 2.  **Embedding:** The Django backend generates a vector embedding of the question.
