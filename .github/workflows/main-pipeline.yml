@@ -1,0 +1,119 @@
+name: Production Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Build Check & Semantic Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: 2. Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@cidqueiroz'
+
+      - name: 3. Install Dependencies
+        run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: 4. Build Check
+        run: npm run build -w frontend
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL }}
+
+      - name: 5. Run Semantic Release
+        id: semantic
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+
+  deploy-backend:
+    name: Deploy Backend (Cloud Run)
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: 2. Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID || vars.GCP_PROJECT_ID }}
+
+      - name: 3. Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID || vars.GCP_PROJECT_ID }}
+
+      - name: 4. Configure Docker
+        run: gcloud auth configure-docker southamerica-east1-docker.pkg.dev
+
+      - name: 5. Build and push Docker image
+        run: |
+          docker build --no-cache -t southamerica-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID || vars.GCP_PROJECT_ID }}/senseidb-repo/senseidb:${{ github.sha }} ./backend
+          docker push southamerica-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID || vars.GCP_PROJECT_ID }}/senseidb-repo/senseidb:${{ github.sha }}
+
+      - name: 6. Deploy to Cloud Run
+        run: |
+          gcloud run deploy senseidb \
+            --image=southamerica-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID || vars.GCP_PROJECT_ID }}/senseidb-repo/senseidb:${{ github.sha }} \
+            --region=southamerica-east1 \
+            --platform=managed \
+            --allow-unauthenticated \
+            --set-env-vars="GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }},GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }},ADMIN_USER_ID=${{ secrets.ADMIN_USER_ID }},GEMINI_API_KEY_1=${{ secrets.GEMINI_API_KEY_1 }},GEMINI_API_KEY_2=${{ secrets.GEMINI_API_KEY_2 }},GEMINI_API_KEY_3=${{ secrets.GEMINI_API_KEY_3 }},GEMINI_API_KEY_4=${{ secrets.GEMINI_API_KEY_4 }},GEMINI_API_KEY_5=${{ secrets.GEMINI_API_KEY_5 }},GEMINI_API_KEY_6=${{ secrets.GEMINI_API_KEY_6 }},GEMINI_API_KEY_7=${{ secrets.GEMINI_API_KEY_7 }},GEMINI_API_KEY_8=${{ secrets.GEMINI_API_KEY_8 }},GEMINI_API_KEY_9=${{ secrets.GEMINI_API_KEY_9 }},GEMINI_API_KEY_10=${{ secrets.GEMINI_API_KEY_10 }}" \
+            --service-account=${{ secrets.GCP_SA_EMAIL }}
+
+  deploy-frontend:
+    name: Deploy Frontend (Firebase)
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: 2. Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@cidqueiroz'
+
+      - name: 3. Install and Build
+        run: |
+          npm install
+          npm run build -w frontend
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PAT }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL }}
+
+      - name: 4. Deploy to Firebase
+        run: |
+          npm install -g firebase-tools
+          firebase deploy --only hosting:senseidb-agent --project cdkteck-hub --token "${{ secrets.FIREBASE_TOKEN }}"
