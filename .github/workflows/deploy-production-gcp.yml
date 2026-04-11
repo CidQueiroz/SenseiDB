@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID || vars.GCP_PROJECT_ID }}
   SERVICE_NAME: senseidb
   REGION: southamerica-east1
 
@@ -18,6 +18,13 @@ jobs:
       contents: 'read'
       id-token: 'write'
     steps:
+      - name: 0. Diagnose Trigger
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          [ -n "${{ secrets.GCP_PROJECT_ID }}" ] && echo "PROJECT_ID secret: FOUND" || echo "PROJECT_ID secret: MISSING"
+          [ -n "${{ secrets.GCP_SA_KEY }}" ] && echo "SA_KEY secret: FOUND" || echo "SA_KEY secret: MISSING"
+
       - name: 1. Checkout Code
         uses: actions/checkout@v4
 
