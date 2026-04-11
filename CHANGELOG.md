@@ -1,3 +1,10 @@
+# [5.5.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.4.1...v5.5.0) (2026-04-11)
+
+
+### Features
+
+* integrate Firebase environment variables into CI/CD pipeline and frontend configuration with improved authentication error logging ([448c191](https://github.com/CidQueiroz/SenseiDB/commit/448c191ec587474885136d1b62e386f2fad48190))
+
 ## [5.4.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.4.0...v5.4.1) (2026-04-11)
 
 
