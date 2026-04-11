@@ -16,12 +16,27 @@ if not firebase_admin._apps:
 
     if google_application_credentials_json:
         try:
-            cred_dict = json.loads(google_application_credentials_json)
+            # Tenta carregar como JSON puro primeiro
+            content = google_application_credentials_json.strip()
+            
+            # Se não começar com '{', pode ser Base64
+            if not content.startswith('{'):
+                import base64
+                try:
+                    decoded = base64.b64decode(content).decode('utf-8')
+                    if decoded.strip().startswith('{'):
+                        content = decoded
+                        print("🛠️ Firebase credentials detected as Base64 and decoded successfully.")
+                except Exception as b64e:
+                    print(f"DEBUG: Failed to decode as Base64: {b64e}")
+
+            cred_dict = json.loads(content)
             cred = credentials.Certificate(cred_dict)
             firebase_admin.initialize_app(cred)
-            print("✅ Firebase initialized from GOOGLE_APPLICATION_CREDENTIALS_JSON environment variable.")
-        except json.JSONDecodeError:
-            print("❌ Failed to parse GOOGLE_APPLICATION_CREDENTIALS_JSON. Falling back to file.")
+            print("✅ Firebase initialized from environment variable.")
+        except json.JSONDecodeError as e:
+            print(f"❌ Failed to parse credentials JSON: {e}")
+            # Fallback a seguir...
             # Fallback to file if JSON is malformed
             current_dir = os.path.dirname(__file__)
             firebase_credentials_path = os.path.join(current_dir, "..", "firebase_credentials.json")
