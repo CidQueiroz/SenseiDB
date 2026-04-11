@@ -29,15 +29,52 @@ class QuotaExceededError(Exception):
 # Configuração Firebase
 def init_firebase() -> Optional[firestore.Client]:
     """
-    Inicializa o Firebase Admin SDK, se ainda não tiver sido inicializado.
+    Inicializa o Firebase Admin SDK com suporte a JSON e Base64 vindo do ambiente.
     Retorna uma instância do cliente Firestore.
     """
     if not firebase_admin._apps:
         try:
-            print("🔑 Tentando inicializar Firebase...")
-            # Em um ambiente Google Cloud (como Cloud Run), as credenciais são detectadas
-            # automaticamente a partir da conta de serviço do ambiente.
-            firebase_admin.initialize_app()
+            print("🔑 Iniciando inicialização robusta do Firebase...")
+            
+            google_application_credentials_json = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+            
+            if google_application_credentials_json:
+                import json
+                # Tenta carregar como JSON puro primeiro
+                content = google_application_credentials_json.strip()
+                
+                # Se não começar com '{', pode ser Base64
+                if not content.startswith('{'):
+                    import base64
+                    try:
+                        decoded = base64.b64decode(content).decode('utf-8')
+                        if decoded.strip().startswith('{'):
+                            content = decoded
+                            print("🛠️ Firebase: Credenciais Base64 decodificadas com sucesso.")
+                    except Exception as b64e:
+                        print(f"⚠️ Firebase: Falha ao tentar decodificar Base64: {b64e}")
+
+                try:
+                    cred_dict = json.loads(content)
+                    cred = credentials.Certificate(cred_dict)
+                    firebase_admin.initialize_app(cred)
+                    print("✅ Firebase inicializado a partir de variável de ambiente (JSON/B64).")
+                except json.JSONDecodeError as je:
+                    print(f"❌ Firebase: Erro ao parsear JSON: {je}")
+                    # Fallback para inicialização padrão sem argumentos
+                    firebase_admin.initialize_app()
+                    print("⚠️ Firebase inicializado com credenciais padrão (fallback) após erro de JSON.")
+            else:
+                # Caso onde não há variável de ambiente explícita
+                firebase_admin.initialize_app()
+                print("✅ Firebase inicializado com credenciais padrão do ambiente Google Cloud.")
+
+        except Exception as e:
+            print(f"❌ Erro Crítico ao inicializar o Firebase: {e}")
+            traceback.print_exc()
+            raise
+    
+    return firestore.client()
 
             # Configura o Google AI SDK (se a chave estiver no ambiente)
             google_api_key = os.environ.get("GOOGLE_API_KEY")
@@ -126,39 +163,79 @@ def buscar_contextos_relevantes(user_id: str, query: str, top_k: int = 5, role: 
         search_query = f"Contexto para {role}: {query}" if role else query
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key={api_key}"
         payload = {"model": "models/gemini-embedding-001", "content": {"parts": [{"text": search_query}]}}
+        
+        print(f"🧠 Gerando embedding para busca: {search_query[:50]}...")
         response = requests.post(url, json=payload, timeout=30)
-        response.raise_for_status()
+        
+        if response.status_code != 200:
+             print(f"❌ Erro ao gerar embedding de busca ({response.status_code}): {response.text}")
+             return []
+             
         query_embedding = response.json()['embedding']['values']
+        print("✅ Embedding de busca gerado.")
         
         contexts = []
 
         # STREAM A: Privado (User)
-        print(f"📡 Buscando Stream Privado (User: {user_id})")
-        user_docs = db.collection('users').document(user_id).collection('inteligencia_critica').stream()
+        print(f"📡 Buscando Stream Privado (User: {user_id} | Collection: inteligencia_critica)")
+        user_docs_ref = db.collection('users').document(user_id).collection('inteligencia_critica')
+        user_docs = list(user_docs_ref.stream())
+        
+        print(f"📊 Documentos encontrados no Firestore (Privado): {len(user_docs)}")
+        
         for doc in user_docs:
             data = doc.to_dict()
             if 'embedding' in data and 'contexto' in data:
-                similarity = np.dot(query_embedding, data['embedding']) / (np.linalg.norm(query_embedding) * np.linalg.norm(data['embedding']))
-                contexts.append({'texto': data['contexto'], 'similarity': similarity, 'source': 'private'})
+                try:
+                    similarity = np.dot(query_embedding, data['embedding']) / (np.linalg.norm(query_embedding) * np.linalg.norm(data['embedding']))
+                    contexts.append({
+                        'texto': data['contexto'], 
+                        'similarity': similarity, 
+                        'source': 'private',
+                        'id': doc.id
+                    })
+                except Exception as sim_err:
+                    print(f"⚠️ Erro ao calcular similaridade para doc {doc.id}: {sim_err}")
+            else:
+                missing = [f for f in ['embedding', 'contexto'] if f not in data]
+                print(f"⚠️ Documento {doc.id} ignorado. Campos faltando: {missing}")
 
         # STREAM B: Global (Role)
         if role:
-            print(f"🌍 Buscando Stream Global (Role: {role})")
-            global_docs = db.collection('global_knowledge').document(role.lower()).collection('concepts').stream()
+            print(f"🌍 Buscando Stream Global (Role: {role} | Collection: global_knowledge)")
+            global_docs_ref = db.collection('global_knowledge').document(role.lower()).collection('concepts')
+            global_docs = list(global_docs_ref.stream())
+            print(f"📊 Documentos encontrados no Firestore (Global): {len(global_docs)}")
+            
             for doc in global_docs:
                 data = doc.to_dict()
                 if 'embedding' in data and 'content' in data:
-                    similarity = np.dot(query_embedding, data['embedding']) / (np.linalg.norm(query_embedding) * np.linalg.norm(data['embedding']))
-                    contexts.append({'texto': data['content'], 'similarity': similarity, 'source': 'global'})
+                    try:
+                        similarity = np.dot(query_embedding, data['embedding']) / (np.linalg.norm(query_embedding) * np.linalg.norm(data['embedding']))
+                        contexts.append({
+                            'texto': data['content'], 
+                            'similarity': similarity, 
+                            'source': 'global',
+                            'id': doc.id
+                        })
+                    except Exception as sim_err:
+                        print(f"⚠️ Erro no cálculo global doc {doc.id}: {sim_err}")
 
         if contexts:
             # Ordena por similaridade e pega os top_k
             contexts.sort(key=lambda x: x['similarity'], reverse=True)
-            return [ctx['texto'] for ctx in contexts[:top_k]]
+            top_score = contexts[0]['similarity']
+            print(f"🎯 Melhor similaridade encontrada: {top_score:.4f}")
+            
+            final_selection = [ctx['texto'] for ctx in contexts[:top_k]]
+            print(f"📦 Selecionados {len(final_selection)} contextos mais relevantes.")
+            return final_selection
         
+        print("⚠️ Busca finalizada, mas nenhum contexto foi acumulado.")
         return []
     except Exception as e:
-        print(f"❌ Erro no Dual-Stream RAG: {e}")
+        print(f"❌ Erro Crítico no Dual-Stream RAG: {e}")
+        traceback.print_exc()
         return []
 
 
