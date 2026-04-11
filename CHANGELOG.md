@@ -1,3 +1,10 @@
+## [5.5.4](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.3...v5.5.4) (2026-04-11)
+
+
+### Bug Fixes
+
+* **auth:** add COOP header to firebase hosting ([a80d5cf](https://github.com/CidQueiroz/SenseiDB/commit/a80d5cf24cac9b998620747f3555239e18c2669f))
+
 ## [5.5.3](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.2...v5.5.3) (2026-04-11)
 
 
