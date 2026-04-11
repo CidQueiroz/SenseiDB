@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🧠 SenseiDB - The Personal RAG AI Agent
-### A private, context-aware AI mentor that adapts to your knowledge.
+### A private, context-aware AI mentor that adapts to your knowledge...
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-API-092E20?style=for-the-badge&logo=django&logoColor=white)
