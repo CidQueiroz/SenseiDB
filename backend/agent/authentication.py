@@ -8,7 +8,7 @@ import os
 import json
 from .models import UserProfile # Import UserProfile
 
-from .utils import init_firebase, UserProfile
+from .utils import init_firebase
 
 # Inicializa o Firebase usando a lógica unificada do utils.py
 init_firebase()

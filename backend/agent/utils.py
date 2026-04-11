@@ -76,20 +76,6 @@ def init_firebase() -> Optional[firestore.Client]:
     
     return firestore.client()
 
-            # Configura o Google AI SDK (se a chave estiver no ambiente)
-            google_api_key = os.environ.get("GOOGLE_API_KEY")
-            if google_api_key:
-                genai.configure(api_key=google_api_key)
-                print("✅ Google AI SDK configurado com API Key do ambiente.")
-
-            print("✅ Firebase inicializado com sucesso.")
-        except Exception as e:
-            print(f"❌ Erro fatal ao inicializar o Firebase: {e}")
-            traceback.print_exc()
-            raise
-    
-    return firestore.client()
-
 
 def carregar_persona(nome_arquivo: str) -> str:
     """Lê o arquivo de texto da persona e retorna o conteúdo."""
