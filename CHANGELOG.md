@@ -1,3 +1,10 @@
+## [5.4.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.4.0...v5.4.1) (2026-04-11)
+
+
+### Bug Fixes
+
+* append trailing slash to backend API URLs ([d508132](https://github.com/CidQueiroz/SenseiDB/commit/d50813234b7cce0193ef2701f967bfe7115d990a))
+
 # [5.4.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.3.0...v5.4.0) (2026-04-11)
 
 
