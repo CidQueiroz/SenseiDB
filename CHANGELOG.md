@@ -1,3 +1,11 @@
+# [5.3.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.8...v5.3.0) (2026-04-11)
+
+
+### Features
+
+* implement persona-based chat system with dynamic icons and add global knowledge seeding script ([e8b5636](https://github.com/CidQueiroz/SenseiDB/commit/e8b563645be8b93df766df47b102a1bb09f21a46))
+* standardizing SenseiDB with modern CI/CD Pipeline (Firebase + GCP) ([028bab8](https://github.com/CidQueiroz/SenseiDB/commit/028bab85607bcfc6bc7873bcac1cc6f4cd4c3420))
+
 ## [5.2.8](https://github.com/CidQueiroz/SenseiDB/compare/v5.2.7...v5.2.8) (2026-04-05)
 
 
