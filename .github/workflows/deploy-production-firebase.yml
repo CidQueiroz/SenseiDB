@@ -1,14 +1,16 @@
 name: Deploy Frontend to Firebase Hosting (Production)
 
 on:
-  workflow_run:
-    workflows: ["Release"]
-    types:
-      - completed
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-production-firebase.yml'
+  workflow_dispatch:
 
 jobs:
   build_and_deploy_production:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: 1. Checkout SenseiDB Repository
