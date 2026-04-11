@@ -1,3 +1,10 @@
+## [5.5.2](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.1...v5.5.2) (2026-04-11)
+
+
+### Bug Fixes
+
+* **backend:** fix syntax and import errors causing container crash ([536085f](https://github.com/CidQueiroz/SenseiDB/commit/536085f0e11445315fbb37e7d966437c6fc9fe8f))
+
 ## [5.5.1](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.0...v5.5.1) (2026-04-11)
 
 
