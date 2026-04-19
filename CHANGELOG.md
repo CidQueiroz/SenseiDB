@@ -1,3 +1,10 @@
+## [5.5.5](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.4...v5.5.5) (2026-04-11)
+
+
+### Bug Fixes
+
+* resolve mermaid chart error and downgrade COOP to unsafe-none ([a27897d](https://github.com/CidQueiroz/SenseiDB/commit/a27897d51b6a87113b1ef8f1d4e9d78bb04aad45))
+
 ## [5.5.4](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.3...v5.5.4) (2026-04-11)
 
 
