@@ -1,3 +1,10 @@
+# [5.6.0](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.5...v5.6.0) (2026-04-19)
+
+
+### Features
+
+* update @cidqueiroz/cdkteck-ui to v2.13.1 and refactor ChatPage to use shared navigation links ([cf63978](https://github.com/CidQueiroz/SenseiDB/commit/cf63978ad0d062b91b3778837d0231ea1f23fe27))
+
 ## [5.5.5](https://github.com/CidQueiroz/SenseiDB/compare/v5.5.4...v5.5.5) (2026-04-11)
 
 
