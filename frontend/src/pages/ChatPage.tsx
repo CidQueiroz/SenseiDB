@@ -7,6 +7,7 @@ import TutorialOverlay from '../components/TutorialOverlay';
 import '../style_sensei.css';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
+import { universoLinks, sobreLinks } from '@cidqueiroz/cdkteck-ui';
 
 interface ChatPageProps {
   isMobileSidebarOpen: boolean;
@@ -102,20 +103,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
     }
   }, [user]);
 
-  const universoLinks = [
-    { href: 'https://cdkteck.com.br', text: 'CDK TECK (Home)', external: true, disabled: false },
-    { href: '#', text: 'PapoDados', external: false, disabled: true },
-    { href: '#', text: 'Caça-Preço', external: false, disabled: true },
-    { href: 'https://sensei.cdkteck.com.br', text: 'SenseiDB', external: true, disabled: false },
-    { href: 'https://gestaorpd.cdkteck.com.br', text: 'Gestão RPD', external: true, disabled: false },
-  ];
-
-  const sobreLinks = [
-    { href: 'https://cdkteck.com.br/sobre', text: 'Filosofia & Identidade', external: true },
-    { href: 'https://cdkteck.com.br/pbi', text: 'Portfólio de Dashboards', external: true },
-    { href: 'https://cdkteck.com.br/portfolio', text: 'Laboratório de Projetos', external: true },
-    { href: 'https://cdkteck.com.br/certificados', text: 'Certificados', external: true },
-  ];
+  // Filtra o link da página atual para não aparecer no menu
+  const filteredUniversoLinks = universoLinks.filter((link: any) => !link.href.includes('senseidb'));
+  const filteredSobreLinks = sobreLinks;
 
   return (
     <div className={`chat-layout ${isMobileSidebarOpen ? 'mobile-sidebar-open' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -160,7 +150,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
               <button className="dropdown-toggle">Universo CDK TECK</button>
               {showUniversoDropdown && (
                 <div className="dropdown-menu">
-                  {universoLinks.map(link => {
+                  {filteredUniversoLinks.map((link: any) => {
                     if (link.disabled) {
                       return (
                         <span key={link.text} className="disabled-link" title="Em desenvolvimento">
@@ -201,7 +191,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isMobileSidebarOpen, toggleMobileSi
               <button className="dropdown-toggle">Sobre</button>
               {showSobreDropdown && (
                 <div className="dropdown-menu">
-                  {sobreLinks.map(link => {
+                  {filteredSobreLinks.map((link: any) => {
                     const isExternal = link.external || (link.href.startsWith('http'));
                     if (isExternal) {
                       return (

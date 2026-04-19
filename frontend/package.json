@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "5.5.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@cidqueiroz/cdkteck-ui": "^2.8.3",
+    "@cidqueiroz/cdkteck-ui": "^2.13.1",
     "axios": "^1.13.2",
     "firebase": "^12.7.0",
     "react": "19.0.0",
